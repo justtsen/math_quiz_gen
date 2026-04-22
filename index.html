@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小三數學練習題目生成系統</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Baloo+2:wght@700;800&display=swap');
+
+  :root {
+    --bg: #FFF8F0;
+    --card: #FFFFFF;
+    --primary: #FF6B35;
+    --secondary: #4ECDC4;
+    --accent: #FFE66D;
+    --purple: #9B59B6;
+    --green: #27AE60;
+    --blue: #2980B9;
+    --text: #2C3E50;
+    --muted: #7F8C8D;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD700 100%);
+    padding: 28px 24px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '🌟';
+    position: absolute; font-size: 80px; opacity: 0.1;
+    top: -10px; left: 10px;
+  }
+  .header::after {
+    content: '✏️';
+    position: absolute; font-size: 60px; opacity: 0.1;
+    bottom: -5px; right: 20px;
+  }
+  .header h1 {
+    font-family: 'Baloo 2', 'Noto Sans TC', sans-serif;
+    font-size: 26px; font-weight: 800;
+    color: #fff;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.15);
+    letter-spacing: 1px;
+  }
+  .header p {
+    color: rgba(255,255,255,0.9);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* UNITS */
+  .units-container { padding: 20px 16px 0; }
+  .unit-block { margin-bottom: 18px; }
+  .unit-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px; padding-left: 4px;
+  }
+  .unit-label .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block;
+  }
+
+  .topics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .topic-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .topic-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 4px;
+  }
+  .topic-card:active { transform: scale(0.97); }
+  .topic-card.selected {
+    border-color: var(--primary);
+    background: #FFF3EE;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.2);
+  }
+  .topic-card .emoji {
+    font-size: 22px;
+    display: block; margin-bottom: 6px;
+  }
+  .topic-card .name {
+    font-size: 13px; font-weight: 700;
+    line-height: 1.4; color: var(--text);
+  }
+  .topic-card .check {
+    position: absolute; top: 8px; right: 8px;
+    width: 20px; height: 20px;
+    background: var(--primary); color: #fff;
+    border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+  }
+  .topic-card.selected .check { display: flex; }
+
+  /* Unit colors */
+  .unit-1 .topic-card::before { background: #FF6B35; }
+  .unit-2 .topic-card::before { background: #4ECDC4; }
+  .unit-3 .topic-card::before { background: #9B59B6; }
+  .unit-4 .topic-card::before { background: #E74C3C; }
+  .unit-5 .topic-card::before { background: #F39C12; }
+  .unit-6 .topic-card::before { background: #27AE60; }
+  .unit-7 .topic-card::before { background: #2980B9; }
+  .unit-8 .topic-card::before { background: #8E44AD; }
+  .unit-9 .topic-card::before { background: #16A085; }
+
+  .unit-1 .dot { background: #FF6B35; }
+  .unit-2 .dot { background: #4ECDC4; }
+  .unit-3 .dot { background: #9B59B6; }
+  .unit-4 .dot { background: #E74C3C; }
+  .unit-5 .dot { background: #F39C12; }
+  .unit-6 .dot { background: #27AE60; }
+  .unit-7 .dot { background: #2980B9; }
+  .unit-8 .dot { background: #8E44AD; }
+  .unit-9 .dot { background: #16A085; }
+
+  /* GENERATE BUTTON */
+  .btn-area {
+    padding: 20px 16px 28px;
+    position: sticky; bottom: 0;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+  }
+  .btn-generate {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #FF6B35, #F7931E);
+    color: #fff; font-size: 16px; font-weight: 800;
+    border: none; border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(255,107,53,0.4);
+    letter-spacing: 1px;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-generate:active { transform: scale(0.97); }
+  .btn-generate:disabled {
+    background: #ccc; box-shadow: none; cursor: not-allowed;
+  }
+
+  /* QUIZ SCREEN */
+  .quiz-screen {
+    display: none;
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  .quiz-screen.active { display: block; }
+
+  .quiz-header {
+    padding: 20px 16px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .btn-back {
+    background: var(--bg); border: none;
+    width: 36px; height: 36px; border-radius: 50%;
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .btn-back:active { background: #eee; }
+  .quiz-title { font-size: 15px; font-weight: 700; flex: 1; }
+  .btn-regen {
+    background: var(--accent); border: none;
+    padding: 6px 12px; border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-regen:active { transform: scale(0.95); }
+
+  .questions-list { padding: 16px; }
+
+  .question-card {
+    background: #fff;
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .question-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: var(--primary);
+  }
+  .q-num {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .q-text {
+    font-size: 15px; line-height: 1.7;
+    color: var(--text);
+  }
+  .q-text .blank {
+    display: inline-block;
+    border-bottom: 2px solid var(--text);
+    min-width: 50px; margin: 0 4px;
+    color: transparent;
+  }
+
+  /* Fraction display */
+  .fraction {
+    display: inline-flex; flex-direction: column;
+    align-items: center; vertical-align: middle;
+    margin: 0 4px; line-height: 1.1;
+  }
+  .fraction .num { font-size: 13px; border-bottom: 1.5px solid #333; padding: 0 3px; }
+  .fraction .den { font-size: 13px; padding: 0 3px; }
+
+  /* Coloring circle */
+  .color-area {
+    margin-top: 14px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: center;
+  }
+  .pie-container {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .pie-svg { cursor: pointer; }
+  .pie-sector {
+    fill: #f0f0f0;
+    stroke: #999; stroke-width: 1.5;
+    transition: fill 0.15s;
+  }
+  .pie-sector.colored { fill: #FFD700; }
+  .color-hint {
+    font-size: 12px; color: var(--muted);
+    margin-top: 6px;
+  }
+  .color-reset {
+    background: #f5f5f5; border: 1px solid #ddd;
+    border-radius: 12px; padding: 4px 10px;
+    font-size: 11px; cursor: pointer; font-family: inherit;
+    margin-top: 6px;
+  }
+
+  /* Answer */
+  .answer-area { margin-top: 12px; }
+  .btn-answer {
+    background: var(--secondary); color: #fff;
+    border: none; border-radius: 20px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-answer:active { transform: scale(0.97); }
+  .answer-box {
+    display: none;
+    margin-top: 10px;
+    background: #E8FDF5;
+    border-radius: 10px;
+    padding: 10px 14px;
+    border-left: 4px solid var(--green);
+    font-size: 14px; font-weight: 700;
+    color: var(--green);
+  }
+  .answer-box.show { display: block; }
+
+  /* Direct式 layout */
+  .division-box {
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+
+  /* Loading */
+  .loading {
+    text-align: center; padding: 60px 20px;
+    color: var(--muted);
+  }
+  .loading .spin {
+    font-size: 48px;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .home-screen { display: block; }
+  .home-screen.hidden { display: none; }
+
+  /* ── 手寫計算板 ── */
+  .draw-area {
+    margin-top: 12px;
+  }
+  .btn-draw-toggle {
+    background: #F0F4FF; color: #2980B9;
+    border: 1.5px solid #BFD0F0; border-radius: 20px;
+    padding: 6px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-draw-toggle:active { transform: scale(0.97); }
+  .btn-draw-toggle.open { background: #E8F4FF; border-color: #2980B9; }
+
+  .draw-panel {
+    display: none;
+    margin-top: 8px;
+    border-radius: 12px;
+    border: 1.5px solid #BFD0F0;
+    background: #fff;
+    overflow: hidden;
+  }
+  .draw-panel.open { display: block; }
+
+  .draw-toolbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px;
+    background: #F5F8FF;
+    border-bottom: 1px solid #E0E8F8;
+    flex-wrap: wrap;
+  }
+  .draw-toolbar label {
+    font-size: 11px; color: var(--muted); font-weight: 600;
+  }
+  .draw-color-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+  .draw-color-btn.active { border-color: #333; transform: scale(1.2); }
+  .draw-size-btn {
+    background: #fff; border: 1.5px solid #ddd; border-radius: 8px;
+    padding: 2px 8px; font-size: 11px; cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .draw-size-btn.active { background: #2980B9; color: #fff; border-color: #2980B9; }
+  .btn-eraser {
+    background: #fff; border: 1.5px solid #ddd; border-radius: 8px;
+    padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
+    transition: all 0.15s;
+  }
+  .btn-eraser.active { background: #FF6B35; color: #fff; border-color: #FF6B35; }
+  .btn-clear {
+    margin-left: auto;
+    background: #fff; border: 1.5px solid #eee; border-radius: 8px;
+    padding: 3px 10px; font-size: 11px; cursor: pointer; font-family: inherit;
+    color: var(--muted);
+  }
+  .draw-canvas {
+    display: block;
+    width: 100%;
+    height: 180px;
+    cursor: crosshair;
+    touch-action: none;
+    background: #FAFCFF;
+  }
+
+  /* ── MODE TABS ── */
+  .mode-tabs {
+    display: flex; gap: 0;
+    margin: 0; padding: 0 16px;
+    background: #fff;
+    border-bottom: 2px solid #f0e8e0;
+  }
+  .mode-tab {
+    flex: 1; padding: 13px 8px;
+    font-size: 13px; font-weight: 700;
+    color: var(--muted); background: transparent;
+    border: none; border-bottom: 3px solid transparent;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+  }
+  .mode-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  /* ── EXAM SCREEN ── */
+  .exam-screen { display: none; min-height: 100vh; padding-bottom: 40px; }
+  .exam-screen.active { display: block; }
+
+  .exam-header {
+    padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .exam-title { font-size: 15px; font-weight: 700; flex: 1; }
+
+  /* 主題多選格 */
+  .exam-topic-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 12px 12px 10px;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    box-shadow: var(--shadow);
+    transition: all 0.18s;
+    position: relative; overflow: hidden;
+  }
+  .exam-topic-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 100%; height: 4px;
+  }
+  .exam-topic-card:active { transform: scale(0.97); }
+  .exam-topic-card.selected {
+    border-color: #2980B9;
+    background: #EBF5FB;
+    box-shadow: 0 4px 14px rgba(41,128,185,0.2);
+  }
+  .exam-topic-card .e-emoji { font-size: 18px; display: block; margin-bottom: 4px; }
+  .exam-topic-card .e-name { font-size: 12px; font-weight: 700; line-height: 1.35; color: var(--text); }
+  .exam-topic-card .e-check {
+    position: absolute; top: 6px; right: 6px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #2980B9; color: #fff;
+    display: none; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+  }
+  .exam-topic-card.selected .e-check { display: flex; }
+
+  .exam-count-badge {
+    display: inline-block;
+    background: #2980B9; color: #fff;
+    border-radius: 20px; padding: 2px 10px;
+    font-size: 12px; font-weight: 700;
+    margin-left: 8px;
+  }
+
+  .btn-exam-generate {
+    width: 100%; padding: 16px;
+    background: linear-gradient(135deg, #2980B9, #1ABC9C);
+    color: #fff; font-size: 16px; font-weight: 800;
+    border: none; border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(41,128,185,0.35);
+    font-family: inherit;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-exam-generate:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+  .btn-exam-generate:not(:disabled):active { transform: scale(0.97); }
+
+  /* ── PRINT SCREEN ── */
+  .print-screen { display: none; }
+  .print-screen.active { display: block; }
+
+  .print-toolbar {
+    background: #2C3E50; color: #fff;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .print-toolbar span { font-size: 14px; font-weight: 700; flex: 1; }
+  .btn-print {
+    padding: 8px 18px; border: none; border-radius: 20px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .btn-print-student { background: #27AE60; color: #fff; }
+  .btn-print-teacher { background: #F39C12; color: #fff; }
+  .btn-print-back    { background: rgba(255,255,255,0.15); color: #fff; }
+  .btn-print:active  { transform: scale(0.96); }
+
+  .print-tabs {
+    display: flex; background: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+  }
+  .print-tab {
+    flex: 1; padding: 11px 8px;
+    font-size: 13px; font-weight: 700; color: #888;
+    background: transparent; border: none;
+    border-bottom: 3px solid transparent; margin-bottom: -2px;
+    cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .print-tab.active { color: #2980B9; border-bottom-color: #2980B9; }
+
+  /* ── EXAM PAPER ── */
+  .paper { padding: 20px 16px; max-width: 800px; margin: 0 auto; }
+  .paper-header {
+    text-align: center; margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #333;
+  }
+  .paper-title {
+    font-size: 22px; font-weight: 900; letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .paper-meta {
+    display: flex; justify-content: space-between;
+    font-size: 13px; color: #555;
+    margin-top: 10px;
+  }
+  .paper-meta span { border-bottom: 1px solid #999; padding-bottom: 2px; min-width: 100px; }
+
+  .exam-q-block {
+    margin-bottom: 10px;
+    padding: 10px 12px 8px;
+    border-radius: 10px;
+    border: 1.5px solid #e8e8e8;
+    background: #fff;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  /* 確保考卷內 SVG 圖形不超出題目框 */
+  .exam-q-block svg { max-width: 100% !important; }
+  .exam-q-block div[style*="margin:10px"] { max-width: 100%; overflow: hidden; }
+  .exam-q-block.teacher-mode { border-color: #F39C12; background: #FFFDF5; }
+
+  /* 考卷兩欄排版容器 */
+  .exam-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  /* 有圖形或多子題的題目佔滿整行 */
+  .exam-q-block.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .exam-q-num {
+    font-size: 11px; font-weight: 800; color: #2980B9;
+    letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .exam-q-text { font-size: 14px; line-height: 1.7; }
+  .exam-q-space {
+    margin-top: 8px;
+    border-bottom: 1px dashed #bbb;
+    height: 32px;
+  }
+  /* 多子題（有子問①②）給更大作答空間 */
+  .exam-q-block.multi-sub .exam-q-space {
+    height: 64px;
+  }
+  .exam-answer {
+    margin-top: 8px;
+    background: #FFF3CD;
+    border-left: 4px solid #F39C12;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px; font-weight: 700; color: #7D4E00;
+    line-height: 1.6;
+  }
+
+  /* ── @media print ── */
+  @media print {
+    .print-toolbar, .print-tabs, .mode-tabs { display: none !important; }
+    .paper { padding: 8px 12px; }
+    .exam-q-block { border-color: #ccc; box-shadow: none; margin-bottom: 8px; }
+    .exam-two-col { gap: 8px; }
+    body { background: #fff; }
+    .paper-header { margin-bottom: 12px; padding-bottom: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div class="home-screen" id="homeScreen">
+  <div class="header">
+    <h1>📐 小三數學出題系統</h1>
+  </div>
+
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabPractice" onclick="switchMode('practice')">✏️ 練習模式</button>
+    <button class="mode-tab" id="tabExam" onclick="switchMode('exam')">📝 考試模式</button>
+  </div>
+
+  <!-- PRACTICE PANEL -->
+  <div id="practicePanel">
+    <div class="units-container" id="unitsContainer"></div>
+    <div class="btn-area">
+      <button class="btn-generate" id="btnGenerate" onclick="startGenerate()" disabled>
+        ✏️ 出題（請先選擇主題）
+      </button>
+    </div>
+  </div>
+
+  <!-- EXAM PANEL -->
+  <div id="examPanel" style="display:none">
+    <div style="padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:13px;color:var(--muted);font-weight:600">
+        可多選主題，系統自動產生 25 題考卷
+      </div>
+      <div>
+        <span style="font-size:12px;color:#2980B9;font-weight:700">已選</span>
+        <span class="exam-count-badge" id="examSelectedCount">0</span>
+      </div>
+    </div>
+    <div class="units-container" id="examUnitsContainer"></div>
+    <div class="btn-area">
+      <button class="btn-exam-generate" id="btnExamGenerate" onclick="startExam()" disabled>
+        📝 產生考卷（請先選擇主題）
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN (practice) -->
+<div class="quiz-screen" id="quizScreen">
+  <div class="quiz-header">
+    <button class="btn-back" onclick="goHome()">←</button>
+    <div class="quiz-title" id="quizTitle">題目</div>
+    <button class="btn-regen" onclick="regenerate()">🔄 重新出題</button>
+  </div>
+  <div class="questions-list" id="questionsList">
+    <div class="loading"><div class="spin">⚙️</div><p>出題中...</p></div>
+  </div>
+</div>
+
+<!-- PRINT SCREEN (exam) -->
+<div class="print-screen" id="printScreen">
+  <div class="print-toolbar">
+    <button class="btn-print btn-print-back" onclick="goBackToExam()">← 返回</button>
+    <span id="printTitle">考卷</span>
+    <button class="btn-print" style="background:#6C757D;color:#fff" onclick="regenExam()">🔄 重新出題</button>
+  </div>
+  <div class="print-tabs">
+    <button class="print-tab active" id="ptabStudent" onclick="switchPrintTab('student')">📄 學生版（無答案）</button>
+    <button class="print-tab" id="ptabTeacher" onclick="switchPrintTab('teacher')">📋 教師版（答案）</button>
+  </div>
+  <div id="studentPaper" class="paper"></div>
+  <div id="teacherPaper" class="paper" style="display:none"></div>
+</div>
+
+<script>
+// ===== TOPIC DATA =====
+const UNITS = [
+  {
+    id: 1, name: '第1單元：除法', color: '#FF6B35',
+    topics: [
+      { id: '1a', name: '二位數除以一位數', emoji: '➗' },
+      { id: '1b', name: '三位數除以一位數', emoji: '🔢' },
+      { id: '1c', name: '除法應用問題', emoji: '🧮' },
+    ]
+  },
+  {
+    id: 2, name: '第2單元：公升與毫升', color: '#4ECDC4',
+    topics: [
+      { id: '2a', name: '認識毫升', emoji: '🧪' },
+      { id: '2b', name: '公升與容量化聚', emoji: '🪣' },
+      { id: '2c', name: '容量的比較', emoji: '⚖️' },
+      { id: '2d', name: '容量的應用', emoji: '💧' },
+    ]
+  },
+  {
+    id: 3, name: '第3單元：分數與加減', color: '#9B59B6',
+    topics: [
+      { id: '3a', name: '分數大小比較', emoji: '📊' },
+      { id: '3b', name: '分數的加減', emoji: '➕' },
+      { id: '3c', name: '分數的應用', emoji: '🎨' },
+    ]
+  },
+  {
+    id: 4, name: '第4單元：圓', color: '#E74C3C',
+    topics: [
+      { id: '4a', name: '認識圓與圓心', emoji: '⭕' },
+      { id: '4b', name: '半徑與直徑', emoji: '📏' },
+      { id: '4c', name: '圓的應用（圖形題）', emoji: '🔵' },
+    ]
+  },
+  {
+    id: 5, name: '第5單元：兩步驟應用問題', color: '#F39C12',
+    topics: [
+      { id: '5a', name: '加減與除法兩步驟', emoji: '🧩' },
+      { id: '5b', name: '加減與乘法兩步驟', emoji: '✖️' },
+      { id: '5c', name: '兩步驟混合應用', emoji: '🔀' },
+    ]
+  },
+  {
+    id: 6, name: '第6單元：一位小數', color: '#27AE60',
+    topics: [
+      { id: '6a', name: '認識一位小數', emoji: '🔟' },
+      { id: '6b', name: '小數的大小比較', emoji: '🔍' },
+      { id: '6c', name: '小數的加減', emoji: '💯' },
+      { id: '6d', name: '小數的應用', emoji: '🌡️' },
+    ]
+  },
+  {
+    id: 7, name: '第7單元：時間', color: '#2980B9',
+    topics: [
+      { id: '7a', name: '24小時制換算', emoji: '🕐' },
+      { id: '7b', name: '小時與分鐘換算', emoji: '⏰' },
+      { id: '7c', name: '時間的計算', emoji: '📅' },
+    ]
+  },
+  {
+    id: 8, name: '第8單元：乘與除', color: '#8E44AD',
+    topics: [
+      { id: '8a', name: '乘除關係', emoji: '🔁' },
+      { id: '8b', name: '乘除應用', emoji: '📦' },
+      { id: '8c', name: '乘法估算', emoji: '🎯' },
+    ]
+  },
+  {
+    id: 9, name: '第9單元：面積', color: '#16A085',
+    topics: [
+      { id: '9a', name: '平方公分與面積', emoji: '📐' },
+      { id: '9b', name: '數格子算面積', emoji: '🔲' },
+    ]
+  },
+];
+
+let selectedTopicId = null;
+
+// ===== BUILD HOME =====
+function buildHome() {
+  const container = document.getElementById('unitsContainer');
+  container.innerHTML = '';
+  UNITS.forEach(unit => {
+    const block = document.createElement('div');
+    block.className = `unit-block unit-${unit.id}`;
+    block.innerHTML = `<div class="unit-label"><span class="dot"></span>${unit.name}</div><div class="topics-grid">${
+      unit.topics.map(t => `
+        <div class="topic-card" id="card-${t.id}" onclick="selectTopic('${t.id}', this)">
+          <span class="emoji">${t.emoji}</span>
+          <span class="name">${t.name}</span>
+          <div class="check">✓</div>
+        </div>`).join('')
+    }</div>`;
+    container.appendChild(block);
+  });
+}
+
+function selectTopic(id, el) {
+  document.querySelectorAll('.topic-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTopicId = id;
+  const btn = document.getElementById('btnGenerate');
+  btn.disabled = false;
+  const topic = findTopic(id);
+  btn.innerHTML = `✏️ 出題：${topic.name}`;
+}
+
+function findTopic(id) {
+  for (const u of UNITS) {
+    const t = u.topics.find(x => x.id === id);
+    if (t) return t;
+  }
+}
+
+// ===== GENERATE =====
+function startGenerate() {
+  if (!selectedTopicId) return;
+  const topic = findTopic(selectedTopicId);
+  document.getElementById('homeScreen').classList.add('hidden');
+  const qs = document.getElementById('quizScreen');
+  qs.classList.add('active');
+  document.getElementById('quizTitle').textContent = topic.emoji + ' ' + topic.name;
+  generateQuestions(selectedTopicId);
+}
+
+function regenerate() {
+  generateQuestions(selectedTopicId);
+}
+
+function goHome() {
+  document.getElementById('homeScreen').classList.remove('hidden');
+  document.getElementById('quizScreen').classList.remove('active');
+}
+
+function generateQuestions(topicId) {
+  const list = document.getElementById('questionsList');
+  list.innerHTML = '<div class="loading"><div class="spin">⚙️</div><p>出題中...</p></div>';
+  setTimeout(() => {
+    // 呼叫兩次 generator 合併，洗牌後取前 10 題
+    // 這樣每次重新出題題型順序和數字都不同
+    const batch1 = GENERATORS[topicId]();
+    const batch2 = GENERATORS[topicId]();
+    const pool = [...batch1, ...batch2];
+    // 洗牌
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const questions = pool.slice(0, 10);
+    renderQuestions(questions);
+  }, 300);
+}
+
+function renderQuestions(questions) {
+  const list = document.getElementById('questionsList');
+  list.innerHTML = '';
+  questions.forEach((q, i) => {
+    const padId = `pad_${i}`;
+    const canvasId = `canvas_${i}`;
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.innerHTML = `
+      <div class="q-num">第 ${i+1} 題</div>
+      <div class="q-text">${q.html}</div>
+      ${q.extra || ''}
+      <div class="answer-area">
+        <button class="btn-answer" onclick="toggleAnswer(this)">顯示答案</button>
+        <div class="answer-box">${q.answer}</div>
+      </div>
+      <div class="draw-area">
+        <button class="btn-draw-toggle" onclick="toggleDrawPanel('${padId}', this)">✏️ 手寫計算</button>
+        <div class="draw-panel" id="${padId}">
+          <div class="draw-toolbar">
+            <label>顏色</label>
+            <div class="draw-color-btn active" style="background:#1a1a1a" onclick="setColor(this,'${canvasId}','#1a1a1a')" title="黑色"></div>
+            <div class="draw-color-btn" style="background:#E74C3C" onclick="setColor(this,'${canvasId}','#E74C3C')" title="紅色"></div>
+            <div class="draw-color-btn" style="background:#2980B9" onclick="setColor(this,'${canvasId}','#2980B9')" title="藍色"></div>
+            <div class="draw-color-btn" style="background:#27AE60" onclick="setColor(this,'${canvasId}','#27AE60')" title="綠色"></div>
+            <label style="margin-left:6px">粗細</label>
+            <button class="draw-size-btn active" onclick="setSize(this,'${canvasId}',2)">細</button>
+            <button class="draw-size-btn" onclick="setSize(this,'${canvasId}',4)">中</button>
+            <button class="draw-size-btn" onclick="setSize(this,'${canvasId}',7)">粗</button>
+            <button class="btn-eraser" onclick="toggleEraser(this,'${canvasId}')">🧹 橡皮擦</button>
+            <button class="btn-clear" onclick="clearCanvas('${canvasId}')">🗑️ 清除</button>
+          </div>
+          <canvas class="draw-canvas" id="${canvasId}"></canvas>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+  // 初始化所有 canvas（延遲等 DOM 渲染完）
+  setTimeout(initAllCanvas, 50);
+}
+
+function toggleAnswer(btn) {
+  const box = btn.nextElementSibling;
+  const showing = box.classList.contains('show');
+  box.classList.toggle('show');
+  btn.textContent = showing ? '顯示答案' : '隱藏答案';
+}
+
+// ===== HELPERS =====
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function fr(n, d) { return `<span class="fraction"><span class="num">${n}</span><span class="den">${d}</span></span>`; }
+
+// ===== QUESTION GENERATORS =====
+const GENERATORS = {
+
+  // ── 1a 二位數除以一位數 ──
+  '1a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const d = rand(2, 9);
+      const q = rand(d, 9);
+      const dividend = q * d + rand(0, d-1);
+      const quo = Math.floor(dividend / d);
+      const rem = dividend % d;
+      if (dividend < 10 || dividend > 99) { i--; continue; }
+      qs.push({
+        html: `寫出直式算算看：<strong>${dividend} ÷ ${d} = （ ）⋯（ ）</strong>`,
+        answer: `${dividend} ÷ ${d} = ${quo} ⋯ ${rem}`
+      });
+    }
+    return qs;
+  },
+
+  // ── 1b 三位數除以一位數 ──
+  '1b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const d = rand(2, 9);
+      const q = rand(10, 99);
+      const dividend = q * d + rand(0, d-1);
+      if (dividend < 100 || dividend > 999) { i--; continue; }
+      const quo = Math.floor(dividend / d);
+      const rem = dividend % d;
+      qs.push({
+        html: `寫出直式算算看：<strong>${dividend} ÷ ${d} = （ ）⋯（ ）</strong>`,
+        answer: `${dividend} ÷ ${d} = ${quo} ⋯ ${rem}`
+      });
+    }
+    return qs;
+  },
+
+  // ── 1c 除法應用問題 ──
+  '1c': () => {
+    const problems = [
+      () => { const d=rand(2,9),items=rand(10,99),each=Math.floor(items/d),rem=items%d; return { html:`老師買了 ${items} 本圖書，平分給 ${d} 組同學，每組可以分到幾本？還多出幾本？`, answer:`${items} ÷ ${d} = ${each}（本）⋯ ${rem}（本）` }; },
+      () => { const d=rand(2,9),total=rand(100,500),each=Math.floor(total/d),rem=total%d; return { html:`工廠做了 ${total} 個玩具，每 ${d} 個裝一盒，最多可以裝成幾盒？還剩幾個？`, answer:`${total} ÷ ${d} = ${each}（盒）⋯ ${rem}（個）` }; },
+      () => { const ppl=rand(2,9),total=rand(100,900),each=Math.floor(total/ppl); const rem=total%ppl; return { html:`${total} 元平分給 ${ppl} 個小朋友，每人可以分到幾元？還剩幾元？`, answer:`${total} ÷ ${ppl} = ${each}（元）⋯ ${rem}（元）` }; },
+      () => { const d=rand(2,9),total=rand(50,200),each=Math.floor(total/d),rem=total%d; return { html:`籃子裡有 ${total} 顆蘋果，每 ${d} 顆裝成一袋，可以裝成幾袋？還剩幾顆？`, answer:`${total} ÷ ${d} = ${each}（袋）⋯ ${rem}（顆）` }; },
+      () => { const d=rand(2,8),total=rand(100,800),each=Math.floor(total/d),rem=total%d; return { html:`彩帶 ${total} 公分，每 ${d} 公分做成一個花圈，可以做幾個？還剩幾公分？`, answer:`${total} ÷ ${d} = ${each}（個）⋯ ${rem}（公分）` }; },
+      () => { const d=rand(2,9),total=rand(50,300),each=Math.floor(total/d),rem=total%d; return { html:`小明有 ${total} 張貼紙，每 ${d} 張貼在一頁，最多可以貼幾頁？還剩幾張？`, answer:`${total} ÷ ${d} = ${each}（頁）⋯ ${rem}（張）` }; },
+      () => { const d=rand(3,9),total=rand(100,600),each=Math.floor(total/d),rem=total%d; return { html:`花店有 ${total} 朵花，每 ${d} 朵綁成一束，可以綁幾束？還剩幾朵？`, answer:`${total} ÷ ${d} = ${each}（束）⋯ ${rem}（朵）` }; },
+      () => { const d=rand(2,9),total=rand(50,250),each=Math.floor(total/d),rem=total%d; return { html:`${total} 片餅乾平分給 ${d} 個班級，每班分到幾片？還剩幾片？`, answer:`${total} ÷ ${d} = ${each}（片）⋯ ${rem}（片）` }; },
+      () => { const d=rand(2,9),total=rand(100,900),each=Math.floor(total/d),rem=total%d; return { html:`倉庫有 ${total} 個蛋黃酥，每 ${d} 個裝一盒，最多裝幾盒？最後一盒還差幾個才滿？`, answer:`${total} ÷ ${d} = ${each}（盒）⋯ ${rem}（個），還差 ${rem===0?0:d-rem} 個才滿` }; },
+      () => { const d=rand(2,9),total=rand(50,300),each=Math.floor(total/d),rem=total%d; return { html:`運動場有 ${total} 個學生，每 ${d} 人排成一排，最多排幾排？還剩幾人？`, answer:`${total} ÷ ${d} = ${each}（排）⋯ ${rem}（人）` }; },
+    ];
+    return problems.map(p => p());
+  },
+
+  // ── 2a 認識毫升 ──
+  '2a': () => {
+    const qs = [];
+    const vals = [100,200,300,400,500,600,700,800,900,150,250,350,450,750];
+    for (let i = 0; i < 10; i++) {
+      const v = pick(vals);
+      const type = rand(0,2);
+      if (type === 0) {
+        qs.push({ html: `量杯裡有 <strong>${v} 毫升</strong>的水，用英文可以寫成？`, answer: `${v} mL` });
+      } else if (type === 1) {
+        qs.push({ html: `<strong>${v} mL</strong> 的水是多少毫升？`, answer: `${v} 毫升` });
+      } else {
+        const b = pick([3,5,10]);
+        const tot = v * b;
+        qs.push({ html: `每瓶 ${v} mL 的飲料，買了 ${b} 瓶，共有幾毫升？`, answer: `${v} × ${b} = ${tot} 毫升` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 2b 公升與容量化聚 ──
+  '2b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,3);
+      if (type === 0) {
+        const l = rand(1,9), ml = pick([0,100,200,300,400,500,600,700,800,900]);
+        const tot = l*1000+ml;
+        qs.push({ html: `${l} 公升 ${ml} 毫升 ＝ （ ） 毫升`, answer: `${tot} 毫升` });
+      } else if (type === 1) {
+        const l = rand(1,9);
+        const ml = pick([100,200,300,400,500]);
+        const tot = l*1000+ml;
+        qs.push({ html: `${tot} 毫升 ＝ （ ）公升（ ）毫升`, answer: `${l} 公升 ${ml} 毫升` });
+      } else if (type === 2) {
+        const l = rand(1,9);
+        qs.push({ html: `${l} 公升 ＝ （ ） 毫升`, answer: `${l*1000} 毫升` });
+      } else {
+        const ml = rand(1,9)*1000;
+        qs.push({ html: `${ml} 毫升 ＝ （ ） 公升`, answer: `${ml/1000} 公升` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 2c 容量的比較 ──
+  '2c': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const a_l = rand(0,5), a_ml = rand(0,9)*100;
+      const b_l = rand(0,5), b_ml = rand(0,9)*100;
+      const a = a_l*1000+a_ml, b = b_l*1000+b_ml;
+      if (a===b) { i--; continue; }
+      const aStr = a_l>0 ? `${a_l}公升${a_ml>0?a_ml+'毫升':''}` : `${a_ml}毫升`;
+      const bStr = b_l>0 ? `${b_l}公升${b_ml>0?b_ml+'毫升':''}` : `${b_ml}毫升`;
+      const sym = a>b?'>':a<b?'<':'=';
+      qs.push({ html: `在（ ）中填入 ＜、＝ 或 ＞：<br><strong>${aStr}（ ）${bStr}</strong>`, answer: `${aStr} ${sym} ${bStr}` });
+    }
+    return qs;
+  },
+
+  // ── 2d 容量的應用 ──
+  '2d': () => {
+    const problems = [
+      ()=>{ const a=rand(1,5)*1000+rand(1,9)*100,b=rand(100,900); return { html:`甲桶有 ${a} 毫升的水，乙桶有 ${b} 毫升的水，兩桶合計有幾毫升？`, answer:`${a} + ${b} = ${a+b} 毫升` }; },
+      ()=>{ const tot=rand(2,8)*1000,used=rand(100,900); return { html:`水壺裡有 ${tot} 毫升的水，喝掉了 ${used} 毫升，還剩幾毫升？`, answer:`${tot} - ${used} = ${tot-used} 毫升`}; },
+      ()=>{ const cap=rand(2,8)*1000,small=rand(200,500),times=Math.floor(cap/small); return { html:`大桶容量 ${cap} 毫升，用 ${small} 毫升的小杯倒，需要倒幾次才能裝滿？`, answer:`${cap} ÷ ${small} = ${times} 次` }; },
+      ()=>{ const a=rand(1,4)*1000+rand(1,9)*100,b=rand(1,4)*1000+rand(1,9)*100; const big=Math.max(a,b),small=Math.min(a,b); return { html:`甲桶有 ${a} 毫升，乙桶有 ${b} 毫升，甲桶比乙桶多幾毫升？`, answer:`|${a} - ${b}| = ${Math.abs(a-b)} 毫升` }; },
+      ()=>{ const l=rand(1,5),ml=rand(1,9)*100,add=rand(100,500); const tot=l*1000+ml+add; return { html:`瓶子裡已有 ${l} 公升 ${ml} 毫升的果汁，再倒入 ${add} 毫升，共有幾毫升？`, answer:`${l*1000+ml} + ${add} = ${tot} 毫升 = ${Math.floor(tot/1000)} 公升 ${tot%1000} 毫升` }; },
+      ()=>{ const full=rand(2,8)*1000,used=rand(1,5)*1000-rand(1,4)*100; return { html:`水壺容量 ${full} 毫升，已裝了 ${used} 毫升，還可以裝多少毫升？`, answer:`${full} - ${used} = ${full-used} 毫升` }; },
+      ()=>{ const each=rand(200,500),n=rand(3,8); const tot=each*n; return { html:`每天喝 ${each} 毫升的牛奶，喝了 ${n} 天，共喝了幾毫升？幾公升幾毫升？`, answer:`${each} × ${n} = ${tot} 毫升 = ${Math.floor(tot/1000)} 公升 ${tot%1000} 毫升` }; },
+      ()=>{ const tot=rand(2,6)*1000,n=rand(2,5); const each=Math.floor(tot/n); return { html:`${tot} 毫升的果汁平分成 ${n} 份，每份有幾毫升？`, answer:`${tot} ÷ ${n} = ${each} 毫升` }; },
+      ()=>{ const a=rand(1,3)*1000+rand(1,9)*100,b=rand(1,3)*1000+rand(1,9)*100; return { html:`媽媽製作木瓜牛奶，需要 ${a} 毫升的木瓜汁和 ${b} 毫升的牛奶，共需要幾毫升？`, answer:`${a} + ${b} = ${a+b} 毫升 = ${Math.floor((a+b)/1000)} 公升 ${(a+b)%1000} 毫升` }; },
+      ()=>{ const full=rand(3,8)*1000,saved=rand(200,800); return { html:`馬桶沖水一次需要 ${full} 毫升，省水後可節省 ${saved} 毫升，節水後需要幾毫升？`, answer:`${full} - ${saved} = ${full-saved} 毫升` }; },
+    ];
+    return problems.map(p => p());
+  },
+
+  // ── 3a 分數大小比較 ──
+  '3a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const d = rand(2,12);
+      const n1 = rand(1,d+3), n2 = rand(1,d+3);
+      if (n1===n2) { i--; continue; }
+      const sym = n1>n2?'>':n1<n2?'<':'=';
+      qs.push({
+        html: `在（ ）中填入 ＜、＝ 或 ＞：<br><strong>${fr(n1,d)}（ ）${fr(n2,d)}</strong>`,
+        answer: `${fr(n1,d)} ${sym} ${fr(n2,d)}`
+      });
+    }
+    return qs;
+  },
+
+  // ── 3b 分數加減 ──
+  '3b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const d = rand(2,12);
+      const type = rand(0,3);
+      if (type===0) {
+        const n1=rand(1,d-1),n2=rand(1,d-n1);
+        qs.push({ html: `算算看：${fr(n1,d)} ＋ ${fr(n2,d)} ＝ （ ）`, answer: `${fr(n1+n2,d)}` });
+      } else if (type===1) {
+        const n1=rand(2,d+2),n2=rand(1,n1);
+        qs.push({ html: `算算看：${fr(n1,d)} － ${fr(n2,d)} ＝ （ ）`, answer: `${fr(n1-n2,d)}` });
+      } else if (type===2) {
+        const n1=rand(1,d-1);
+        qs.push({ html: `算算看：1 － ${fr(n1,d)} ＝ （ ）`, answer: `${fr(d-n1,d)}` });
+      } else {
+        const n1=rand(1,d);
+        qs.push({ html: `算算看：${fr(n1,d)} ＋ （ ）＝ 1`, answer: `${fr(d-n1,d)}` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 3c 分數的應用（多元題型） ──
+  '3c': () => {
+    const configs = [
+      [1,2],[1,3],[2,3],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],
+      [1,6],[2,6],[5,6],[1,8],[3,8],[5,8],[1,10],[3,10],[7,10]
+    ];
+
+    // 生活情境名詞庫
+    const items = [
+      { name:'餅乾', unit:'塊', unit2:'塊' },
+      { name:'披薩', unit:'個', unit2:'個' },
+      { name:'蛋糕', unit:'個', unit2:'個' },
+      { name:'水果', unit:'個', unit2:'個' },
+      { name:'巧克力', unit:'條', unit2:'條' },
+      { name:'麵包', unit:'個', unit2:'個' },
+      { name:'蔥油餅', unit:'張', unit2:'張' },
+      { name:'西瓜', unit:'個', unit2:'個' },
+    ];
+    const people = [
+      ['媽媽','爸爸'],['哥哥','妹妹'],['小明','小花'],
+      ['奶奶','爺爺'],['老師','同學'],['皮皮','美美'],
+    ];
+
+    // 題型函式池
+    const typePool = [
+      // 類型A：兩人各有分數，問總共（分數＋整數）
+      () => {
+        const it = pick(items);
+        const [p1, p2] = pick(people);
+        const [n, d] = pick(configs);
+        const whole = rand(1, 3);
+        // ans: whole + n/d
+        const totalN = whole * d + n;
+        const ansWhole = Math.floor(totalN / d);
+        const ansRem = totalN % d;
+        const ansStr = ansRem === 0 ? `${ansWhole} ${it.unit}` : `${ansWhole} 又 ${fr(ansRem,d)} ${it.unit}`;
+        return {
+          html: `${p1}有 ${fr(n,d)} ${it.unit}${it.name}，${p2}有 ${whole} ${it.unit}${it.name}，兩人總共有多少${it.name}？`,
+          answer: `${fr(n,d)} ＋ ${whole} ＝ ${ansStr}`
+        };
+      },
+      // 類型B：兩人各有分數（同分母），問合計
+      () => {
+        const it = pick(items);
+        const [p1, p2] = pick(people);
+        const d = pick([3,4,5,6,8,10]);
+        const n1 = rand(1, d-1), n2 = rand(1, d-1);
+        const tot = n1 + n2;
+        const ansWhole = Math.floor(tot/d), ansRem = tot%d;
+        const ansStr = ansRem === 0 ? `${ansWhole} ${it.unit}` : (ansWhole > 0 ? `${ansWhole} 又 ${fr(ansRem,d)} ${it.unit}` : `${fr(tot,d)} ${it.unit}`);
+        return {
+          html: `${p1}吃了 ${fr(n1,d)} ${it.unit}${it.name}，${p2}吃了 ${fr(n2,d)} ${it.unit}${it.name}，兩人共吃了多少${it.name}？`,
+          answer: `${fr(n1,d)} ＋ ${fr(n2,d)} ＝ ${fr(tot,d)} ${it.unit}（= ${ansStr}）`
+        };
+      },
+      // 類型C：有整數，用掉分數，剩多少
+      () => {
+        const it = pick(items);
+        const [p1] = pick(people);
+        const d = pick([3,4,5,6,8,10]);
+        const whole = rand(1, 3);
+        const used_n = rand(1, d-1);
+        // whole - used_n/d
+        const remN = whole * d - used_n;
+        const remWhole = Math.floor(remN/d), remFrac = remN%d;
+        const ansStr = remFrac === 0 ? `${remWhole} ${it.unit}` : `${remWhole > 0 ? remWhole+' 又 ' : ''}${fr(remFrac,d)} ${it.unit}`;
+        return {
+          html: `${p1}有 ${whole} ${it.unit}${it.name}，吃了 ${fr(used_n,d)} ${it.unit}，還剩多少${it.name}？`,
+          answer: `${whole} － ${fr(used_n,d)} ＝ ${ansStr}`
+        };
+      },
+      // 類型D：誰吃得比較多（分數比較）
+      () => {
+        const it = pick(items);
+        const [p1, p2] = pick(people);
+        const d = pick([4,5,6,8,10]);
+        let n1 = rand(1,d-1), n2 = rand(1,d-1);
+        while (n1 === n2) n2 = rand(1,d-1);
+        const bigger = n1 > n2 ? p1 : p2;
+        return {
+          html: `${p1}吃了 ${fr(n1,d)} ${it.unit}${it.name}，${p2}吃了 ${fr(n2,d)} ${it.unit}${it.name}，誰吃得比較多？多多少？`,
+          answer: `${bigger} 多，多了 ${fr(Math.abs(n1-n2),d)} ${it.unit}`
+        };
+      },
+      // 類型E：分數塗色（圓形）
+      () => {
+        const [n,d] = pick(configs);
+        const svgId = `pie_${rand(1000,9999)}_${Date.now()}`;
+        return {
+          html: `請把圓形的 ${fr(n,d)} 塗上顏色（點擊扇形來塗色）`,
+          extra: buildPie(d, svgId, n),
+          answer: `共 ${d} 等份，塗色 ${n} 份（即 ${fr(n,d)}）`
+        };
+      },
+      // 類型F：已知剩餘，問原本
+      () => {
+        const it = pick(items);
+        const [p1] = pick(people);
+        const d = pick([3,4,5,6,8]);
+        const used_n = rand(1, d-1);
+        const rem_n = d - used_n;
+        return {
+          html: `${p1}的${it.name}吃了 ${fr(used_n,d)} ${it.unit}，還剩下 ${fr(rem_n,d)} ${it.unit}，原來有幾${it.unit}${it.name}？`,
+          answer: `${fr(used_n,d)} ＋ ${fr(rem_n,d)} ＝ ${fr(d,d)} ＝ 1 ${it.unit}`
+        };
+      },
+      // 類型G：三人分一個，各吃幾份問剩多少
+      () => {
+        const it = pick(items);
+        const d = pick([4,6,8,10]);
+        const n1 = rand(1,2), n2 = rand(1,2);
+        if (n1+n2 >= d) return typePool[6](); // retry
+        const rem = d - n1 - n2;
+        const [p1, p2, p3] = ['哥哥','妹妹','弟弟'];
+        return {
+          html: `一${it.unit}${it.name}切成 ${d} 等份，${p1}吃了 ${fr(n1,d)}，${p2}吃了 ${fr(n2,d)}，還剩幾分之幾？`,
+          answer: `1 － ${fr(n1,d)} － ${fr(n2,d)} ＝ ${fr(rem,d)}`
+        };
+      },
+      // 類型H：分數加整數再減
+      () => {
+        const it = pick(items);
+        const [p1, p2] = pick(people);
+        const d = pick([3,4,5,6]);
+        const whole = rand(1,2);
+        const n_add = rand(1,d-1);
+        const n_take = rand(1, whole*d + n_add - 1);
+        const totalN = whole*d + n_add;
+        const remN = totalN - n_take;
+        const ansW = Math.floor(remN/d), ansF = remN%d;
+        const ansStr = ansF===0 ? `${ansW} ${it.unit}` : `${ansW>0?ansW+'又':''}${fr(ansF,d)} ${it.unit}`;
+        return {
+          html: `${p1}有 ${whole} ${it.unit}${it.name}，又得到 ${fr(n_add,d)} ${it.unit}，送出去 ${fr(n_take,d)} ${it.unit}，現在還有多少${it.name}？`,
+          answer: `${whole} ＋ ${fr(n_add,d)} － ${fr(n_take,d)} ＝ ${ansStr}`
+        };
+      },
+    ];
+
+    // 每次出題：混合8種類型，確保每種至少出現一次，再隨機補
+    const pool = [...typePool];
+    // shuffle pool
+    for (let i = pool.length-1; i > 0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [pool[i],pool[j]] = [pool[j],pool[i]];
+    }
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const fn = pool[i % pool.length];
+      try { qs.push(fn()); } catch(e) { qs.push(typePool[4]()); } // fallback to coloring
+    }
+    return qs;
+  },
+
+  // ── 4a 認識圓 ──
+  '4a': () => {
+    const qs = [];
+    const problems = [
+      ()=>({ html:'圓上每一個點到圓心的距離都（ ）。', answer:'一樣長（相等）' }),
+      ()=>({ html:'圓的中心點叫做（ ）。', answer:'圓心' }),
+      ()=>({ html:'從圓心到圓周上任意一點的線段叫做（ ）。', answer:'半徑' }),
+      ()=>({ html:'通過圓心且兩端都在圓周上的線段叫做（ ）。', answer:'直徑' }),
+      ()=>({ html:'同一個圓的直徑是半徑的（ ）倍。', answer:'2 倍' }),
+      ()=>({ html:'同一個圓的半徑是直徑的（ ）。', answer:'一半（½）' }),
+      ()=>{ const r=rand(2,10); return { html:`一個圓的半徑是 ${r} 公分，直徑是幾公分？`, answer:`${r} × 2 = ${r*2} 公分` }; },
+      ()=>{ const d=rand(4,20)*2; return { html:`一個圓的直徑是 ${d} 公分，半徑是幾公分？`, answer:`${d} ÷ 2 = ${d/2} 公分` }; },
+      ()=>{ const r=rand(3,15); return { html:`畫一個半徑 ${r} 公分的圓，需要把圓規兩腳張開幾公分？`, answer:`張開 ${r} 公分` }; },
+      ()=>{ const d=rand(6,24)*2; return { html:`一個圓的直徑是 ${d} 公分，要用圓規畫這個圓，需要把兩腳張開幾公分？`, answer:`${d} ÷ 2 = ${d/2} 公分` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 4c 圓的應用（圖形題）──
+  '4c': () => {
+    const W = 260, H = 190;
+
+    // ─── SVG 工具函式 ─────────────────────────────────────────────
+
+    // 正方形或長方形 + 內切圓
+    // markWhat: 'diameter'|'radius'|'both'  — 哪個用 "?" 標示（紅色）
+    // knownDiam: true = 圓的直徑已知，畫實線標; false = 要答的，畫虛線問號
+    function rectCircleSVG(shapeW, shapeH, markWhat) {
+      const MW = 300, MH = 200;   // SVG canvas
+      const ML = 44, MR = 14;     // 左側留給高度標籤，右側邊距
+      const MT = 14, MB = 26;     // 上下邊距（底部留給寬度標籤）
+      const sc = Math.min((MW - ML - MR) / shapeW, (MH - MT - MB) / shapeH, 10);
+      const rw = shapeW * sc, rh = shapeH * sc;
+      // 在可用區域內置中
+      const rx = ML + ((MW - ML - MR) - rw) / 2;
+      const ry = MT + ((MH - MT - MB) - rh) / 2;
+      const cr = Math.min(rw, rh) / 2;
+      const cx = rx + rw/2, cy = ry + rh/2;
+      const f = n => n.toFixed(1);
+
+      // 半徑線 (向右)
+      const rLine = `<line x1="${f(cx)}" y1="${f(cy)}" x2="${f(cx+cr)}" y2="${f(cy)}" stroke="#E74C3C" stroke-width="2"/>`;
+      const rDot  = `<circle cx="${f(cx)}" cy="${f(cy)}" r="3" fill="#E74C3C"/>`;
+      const rAsk  = (markWhat==='radius'||markWhat==='both');
+      const rTxt  = `<text x="${f(cx+cr/2)}" y="${f(cy-7)}" font-size="12" fill="#E74C3C" text-anchor="middle" font-weight="bold">${rAsk?'半徑 ?':'半徑'}</text>`;
+
+      // 直徑線 (貫穿)
+      const dShow = (markWhat==='diameter'||markWhat==='both');
+      const dLine = dShow ? `<line x1="${f(cx-cr)}" y1="${f(cy)}" x2="${f(cx+cr)}" y2="${f(cy)}" stroke="#9B59B6" stroke-width="1.8" stroke-dasharray="5,3"/>` : '';
+      const dTxt  = dShow ? `<text x="${f(cx)}" y="${f(cy+cr+16)}" font-size="12" fill="#9B59B6" text-anchor="middle" font-weight="bold">直徑 ?</text>` : '';
+
+      // 形狀尺寸標籤
+      const wTxt = `<text x="${f(cx)}" y="${f(ry+rh+18)}" font-size="12" fill="#2980B9" text-anchor="middle" font-weight="bold">${shapeW} 公分</text>`;
+      const hTxt = `<text x="${f(rx-10)}" y="${f(cy+5)}" font-size="12" fill="#2980B9" text-anchor="end" font-weight="bold">${shapeH} 公分</text>`;
+
+      return `<div style="margin:10px 0;text-align:left">
+        <svg viewBox="0 0 ${MW} ${MH}" width="100%" style="max-width:${MW}px;display:block;
+             border-radius:10px;background:#f8fcff;border:1.5px solid #dde8f5">
+          <rect x="${f(rx)}" y="${f(ry)}" width="${f(rw)}" height="${f(rh)}" fill="#EBF5FB" stroke="#2980B9" stroke-width="2.2" rx="2"/>
+          <circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cr)}" fill="none" stroke="#E74C3C" stroke-width="2" stroke-dasharray="6,3"/>
+          ${rDot}${rLine}${rTxt}
+          ${dLine}${dTxt}
+          ${wTxt}${hTxt}
+        </svg></div>`;
+    }
+
+    // 甲乙兩個長方形並排，各含最大圓
+    function twoRectsSVG(opts1, opts2) {
+      // 整張 SVG：寬 520、高 200；左右各保留 36px 給高度標籤，中間 16px 分隔線
+      const TW = 520, TH = 200;
+      const GAP = 16;           // 中央分隔線寬
+      const ML = 36;            // 每個 panel 左側留給高度標籤的空間
+      const MR = 10;            // 每個 panel 右側邊距
+      const MT = 24;            // 頂部留給標題
+      const MB = 22;            // 底部留給寬度標籤
+      const panelW = (TW - GAP) / 2;   // 每個 panel 佔 252px
+
+      const f = n => n.toFixed(1);
+
+      function panel(o, panelOffX) {
+        // 可用於畫形狀的區域
+        const availW = panelW - ML - MR;
+        const availH = TH - MT - MB;
+        const sc = Math.min(availW / o.w, availH / o.h, 8);
+        const rw = o.w * sc, rh = o.h * sc;
+        // 在可用區域內置中
+        const rx = panelOffX + ML + (availW - rw) / 2;
+        const ry = MT + (availH - rh) / 2;
+        const cr = Math.min(rw, rh) / 2;
+        const cx = rx + rw / 2, cy = ry + rh / 2;
+
+        // 標題（甲／乙）置中於 panel
+        const titleX = panelOffX + panelW / 2;
+        const title = `<text x="${f(titleX)}" y="${MT - 6}" font-size="13" fill="#444" text-anchor="middle" font-weight="bold">${o.label}</text>`;
+
+        // 寬度標籤（形狀下方）
+        const wTxt = `<text x="${f(cx)}" y="${f(ry + rh + 17)}" font-size="11" fill="#2980B9" text-anchor="middle" font-weight="bold">${o.w} 公分</text>`;
+
+        // 高度標籤（形狀左側，避免被裁切：固定貼在 rx-8 位置）
+        const hTxt = `<text x="${f(rx - 8)}" y="${f(cy + 4)}" font-size="11" fill="#2980B9" text-anchor="end" font-weight="bold">${o.h} 公分</text>`;
+
+        // 圓心點
+        const dot = `<circle cx="${f(cx)}" cy="${f(cy)}" r="2.5" fill="#E74C3C"/>`;
+
+        return `
+          ${title}
+          <rect x="${f(rx)}" y="${f(ry)}" width="${f(rw)}" height="${f(rh)}"
+                fill="#EBF5FB" stroke="#2980B9" stroke-width="2" rx="2"/>
+          <circle cx="${f(cx)}" cy="${f(cy)}" r="${f(cr)}"
+                  fill="none" stroke="#E74C3C" stroke-width="2" stroke-dasharray="5,3"/>
+          ${dot}
+          ${wTxt}
+          ${hTxt}`;
+      }
+
+      const divider = `<line x1="${TW/2}" y1="8" x2="${TW/2}" y2="${TH-8}"
+                             stroke="#ccc" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+
+      return `<div style="margin:10px 0;text-align:left">
+        <svg viewBox="0 0 ${TW} ${TH}" width="100%" style="max-width:${TW}px;display:block;
+             border-radius:10px;background:#f8fcff;border:1.5px solid #dde8f5">
+          ${panel(opts1, 0)}
+          ${divider}
+          ${panel(opts2, panelW + GAP)}
+        </svg></div>`;
+    }
+
+    // 紙帶排圓（unknownType: 'count'|'diameter'|'length'）
+    function stripSVG(d_cm, shownCount, totalLen_cm, unknownType) {
+      const SW = 400, SH = 160;
+      const ML = 16, MR = 46;   // 右側留給個數標籤
+      const MT = 44, MB = 34;   // 上方留直徑標籤，下方留長度標籤
+      const availW = SW - ML - MR;
+      const availH = SH - MT - MB;
+      const sc = Math.min(availW / totalLen_cm, availH / d_cm, 14);
+      const cr = d_cm * sc / 2;
+      const cy = MT + availH / 2;
+      const f = n => n.toFixed(1);
+
+      // 圓
+      let circles = '';
+      for (let i = 0; i < shownCount; i++) {
+        const ccx = ML + cr + i * d_cm * sc;
+        circles += `<circle cx="${f(ccx)}" cy="${f(cy)}" r="${f(cr)}" fill="#fde8e8" stroke="#E74C3C" stroke-width="1.8"/>`;
+      }
+
+      const stripW = totalLen_cm * sc;
+      const stripRight = ML + stripW;
+
+      // 底部長度標示
+      const lenLabel = unknownType === 'length'
+        ? `<line x1="${ML}" y1="${f(cy+cr+10)}" x2="${f(stripRight)}" y2="${f(cy+cr+10)}" stroke="#E74C3C" stroke-width="1.5"/>
+           <text x="${f(ML+stripW/2)}" y="${f(cy+cr+26)}" font-size="12" fill="#E74C3C" text-anchor="middle" font-weight="bold">紙帶長 ? 公分</text>`
+        : `<line x1="${ML}" y1="${f(cy+cr+10)}" x2="${f(stripRight)}" y2="${f(cy+cr+10)}" stroke="#2980B9" stroke-width="1.5"/>
+           <text x="${f(ML+stripW/2)}" y="${f(cy+cr+26)}" font-size="12" fill="#2980B9" text-anchor="middle" font-weight="bold">共 ${totalLen_cm} 公分</text>`;
+
+      // 頂部直徑標示（第一個圓）
+      const diamLabel = unknownType === 'diameter'
+        ? `<line x1="${ML}" y1="${f(cy)}" x2="${f(ML+d_cm*sc)}" y2="${f(cy)}" stroke="#9B59B6" stroke-width="2"/>
+           <text x="${f(ML+d_cm*sc/2)}" y="${f(cy-cr-10)}" font-size="11" fill="#9B59B6" text-anchor="middle" font-weight="bold">直徑 ? 公分</text>`
+        : `<line x1="${ML}" y1="${f(cy)}" x2="${f(ML+d_cm*sc)}" y2="${f(cy)}" stroke="#E74C3C" stroke-width="1.5"/>
+           <text x="${f(ML+d_cm*sc/2)}" y="${f(cy-cr-10)}" font-size="11" fill="#E74C3C" text-anchor="middle" font-weight="bold">直徑 ${d_cm} 公分</text>`;
+
+      // 右側個數
+      const countLabel = unknownType === 'count'
+        ? `<text x="${f(stripRight+8)}" y="${f(cy+5)}" font-size="13" fill="#E74C3C" font-weight="bold">? 個</text>`
+        : `<text x="${f(stripRight+8)}" y="${f(cy+5)}" font-size="12" fill="#555" font-weight="bold">${shownCount} 個</text>`;
+
+      return `<div style="margin:10px 0;text-align:left">
+        <svg viewBox="0 0 ${SW} ${SH}" width="100%" style="max-width:${SW}px;display:block;
+             border-radius:10px;background:#f8fcff;border:1.5px solid #dde8f5">
+          <rect x="${ML}" y="${f(cy-cr)}" width="${f(stripW)}" height="${f(cr*2)}"
+                fill="#EBF5FB" stroke="#2980B9" stroke-width="1.8" rx="5"/>
+          ${circles}
+          ${lenLabel}
+          ${diamLabel}
+          ${countLabel}
+        </svg></div>`;
+    }
+
+    // ─── 4 種題型 ─────────────────────────────────────────────────
+
+    // 類型 1：正方形內最大圓
+    const typeSquare = () => {
+      const s = rand(3,16)*2;
+      const askR = pick([true, false]);
+      return {
+        html: `下圖是邊長 <strong>${s} 公分</strong>的正方形，裡面畫了一個最大的圓。<br>這個圓的<strong>${askR?'半徑':'直徑'}</strong>是幾公分？`,
+        extra: rectCircleSVG(s, s, askR ? 'radius' : 'diameter'),
+        answer: askR
+          ? `半徑 ＝ ${s} ÷ 2 ＝ ${s/2} 公分`
+          : `直徑 ＝ 邊長 ＝ ${s} 公分`
+      };
+    };
+
+    // 類型 2：長方形內最大圓
+    const typeRect = () => {
+      const w = rand(5,15)*2;
+      const h = rand(2, Math.max(2, Math.floor(w/2)-1))*2;
+      const shorter = Math.min(w,h);
+      const askBoth = pick([true, false]);
+      const askR = pick([true, false]);
+      if (askBoth) {
+        return {
+          html: `下圖長方形長 <strong>${w} 公分</strong>、寬 <strong>${h} 公分</strong>，裡面畫了一個最大的圓。<br>這個圓的<strong>直徑</strong>和<strong>半徑</strong>各是幾公分？`,
+          extra: rectCircleSVG(w, h, 'both'),
+          answer: `直徑 ＝ 短邊 ＝ ${shorter} 公分，半徑 ＝ ${shorter} ÷ 2 ＝ ${shorter/2} 公分`
+        };
+      }
+      return {
+        html: `下圖長方形長 <strong>${w} 公分</strong>、寬 <strong>${h} 公分</strong>，在裡面畫最大的圓。<br>這個圓的<strong>${askR?'半徑':'直徑'}</strong>是幾公分？`,
+        extra: rectCircleSVG(w, h, askR ? 'radius' : 'diameter'),
+        answer: askR
+          ? `半徑 ＝ 短邊 ÷ 2 ＝ ${shorter} ÷ 2 ＝ ${shorter/2} 公分`
+          : `直徑 ＝ 短邊 ＝ ${shorter} 公分`
+      };
+    };
+
+    // 類型 3：甲乙比較
+    const typeCompare = () => {
+      let w1,h1,w2,h2,d1,d2;
+      // 確保直徑不同
+      do {
+        w1=rand(4,13)*2; h1=rand(2,5)*2;
+        w2=rand(4,13)*2; h2=rand(2,5)*2;
+        d1=Math.min(w1,h1); d2=Math.min(w2,h2);
+      } while (d1===d2 || w1===w2 && h1===h2);
+
+      const variant = pick(['bigger','diff','radius']);
+      let qHtml, ans;
+      if (variant==='bigger') {
+        const bigger = d1>d2?'甲':'乙';
+        qHtml = `下圖甲、乙各在長方形內畫最大的圓，哪個圓的<strong>直徑</strong>比較大？`;
+        ans = `甲最大圓直徑 ＝ ${d1} 公分，乙最大圓直徑 ＝ ${d2} 公分 → <strong>${bigger}</strong> 的圓比較大`;
+      } else if (variant==='diff') {
+        qHtml = `下圖甲、乙各在長方形內畫最大的圓，兩個圓的<strong>直徑相差</strong>幾公分？`;
+        ans = `${d1} 公分 － ${d2} 公分 ＝ ${Math.abs(d1-d2)} 公分`;
+      } else {
+        const bigger = d1>d2?'甲':'乙';
+        qHtml = `下圖甲、乙各在長方形內畫最大的圓，哪個圓的<strong>半徑</strong>比較大？兩個圓半徑相差幾公分？`;
+        ans = `甲半徑 ＝ ${d1/2} 公分，乙半徑 ＝ ${d2/2} 公分 → <strong>${bigger}</strong> 的圓較大，相差 ${Math.abs(d1/2-d2/2)} 公分`;
+      }
+      return {
+        html: qHtml,
+        extra: twoRectsSVG(
+          { w:w1, h:h1, label:'甲', markCircle:'none', markSide:'none' },
+          { w:w2, h:h2, label:'乙', markCircle:'none', markSide:'none' }
+        ),
+        answer: ans
+      };
+    };
+
+    // 類型 4：紙帶排圓（三種子變化）
+    const typeStrip = () => {
+      const d = pick([4,6,8,10,12]);
+      const variant = pick(['count','diameter','length']);
+
+      if (variant==='count') {
+        // 已知直徑、紙帶長 → 問排幾個
+        const count = rand(3,8);
+        const extra = rand(1,d-1); // leftover so it's not perfectly divisible
+        const totalLen = d*count + extra;
+        const fits = Math.floor(totalLen/d);
+        return {
+          html: `下圖紙帶長 <strong>${totalLen} 公分</strong>，要排放直徑 <strong>${d} 公分</strong>的圓形貼紙（不重疊、不超出紙帶），最多可以排幾個？`,
+          extra: stripSVG(d, fits, totalLen, 'count'),
+          answer: `${totalLen} ÷ ${d} ＝ ${fits}（個）…${totalLen%d}（公分），最多排 <strong>${fits} 個</strong>`
+        };
+      } else if (variant==='diameter') {
+        // 已知紙帶長、個數 → 問圓的直徑
+        const count = rand(3,7);
+        const d2 = pick([4,6,8,10]);
+        const totalLen = d2*count;
+        return {
+          html: `下圖紙帶長 <strong>${totalLen} 公分</strong>，剛好可以排下 <strong>${count} 個</strong>相同的圓形貼紙（緊密排列，不重疊）。每個圓形的<strong>直徑</strong>是幾公分？<strong>半徑</strong>是幾公分？`,
+          extra: stripSVG(d2, count, totalLen, 'diameter'),
+          answer: `直徑 ＝ ${totalLen} ÷ ${count} ＝ ${d2} 公分，半徑 ＝ ${d2} ÷ 2 ＝ ${d2/2} 公分`
+        };
+      } else {
+        // 已知直徑、個數 → 問紙帶長
+        const count = rand(3,8);
+        const totalLen = d*count;
+        return {
+          html: `要把 <strong>${count} 個</strong>直徑 <strong>${d} 公分</strong>的圓形貼紙，緊密排成一排不重疊，需要一條至少幾公分長的紙帶？`,
+          extra: stripSVG(d, count, totalLen, 'length'),
+          answer: `${d} × ${count} ＝ ${totalLen} 公分`
+        };
+      }
+    };
+
+    // ─── 組合 10 題（4 種各出現 2～3 次，隨機打散）────────────────
+    const pool = [
+      typeSquare, typeSquare, typeSquare,
+      typeRect,   typeRect,   typeRect,
+      typeCompare,typeCompare,
+      typeStrip,  typeStrip,
+    ];
+    // shuffle
+    for (let i = pool.length-1; i>0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [pool[i],pool[j]] = [pool[j],pool[i]];
+    }
+    const problems = [];
+    for (let i=0; i<10; i++) {
+      try { problems.push(pool[i]()); } catch(e) { problems.push(typeSquare()); }
+    }
+    return problems;
+  },
+
+
+  '4b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,3);
+      if (type===0) {
+        const r=rand(2,15);
+        qs.push({ html:`已知半徑＝ ${r} 公分，直徑＝（ ）公分`, answer:`${r*2} 公分` });
+      } else if (type===1) {
+        const d=rand(4,30)*2;
+        qs.push({ html:`已知直徑＝ ${d} 公分，半徑＝（ ）公分`, answer:`${d/2} 公分` });
+      } else if (type===2) {
+        const r1=rand(2,8),r2=rand(2,8);
+        qs.push({ html:`大圓半徑 ${r1} 公分，小圓半徑 ${r2} 公分，大圓直徑比小圓直徑多幾公分？`, answer:`(${r1}×2) - (${r2}×2) = ${(r1-r2)*2} 公分` });
+      } else {
+        const d1=rand(4,20)*2,d2=rand(4,20)*2;
+        qs.push({ html:`甲圓直徑 ${d1} 公分，乙圓直徑 ${d2} 公分，甲圓半徑比乙圓半徑多幾公分？`, answer:`(${d1}÷2) - (${d2}÷2) = ${Math.abs(d1/2-d2/2)} 公分` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 5a 加減與除法兩步驟 ──
+  '5a': () => {
+    // 每題都是真正的兩步驟：加減 + 除法，或 除法 + 加減
+    // 步驟結構標示在 answer 中讓學生看清楚
+    const problems = [
+      // (加法) ÷ 除數
+      ()=>{ const a=rand(100,300),b=rand(50,150),g=rand(2,8); const each=Math.floor((a+b)/g); return { html:`男生有 ${a} 人，女生有 ${b} 人，全部合起來平分成 ${g} 組，每組有幾人？`, answer:`① ${a} + ${b} = ${a+b} 人　② ${a+b} ÷ ${g} = ${each} 人` }; },
+      // (減法) ÷ 除數
+      ()=>{ const tot=rand(200,600),used=rand(50,150),g=rand(2,7); const each=Math.floor((tot-used)/g); return { html:`有 ${tot} 元，先買了一個 ${used} 元的文具，剩下的錢平分給 ${g} 個人，每人分到幾元？`, answer:`① ${tot} - ${used} = ${tot-used} 元　② ${tot-used} ÷ ${g} = ${each} 元` }; },
+      // (加法) ÷ 除數（有餘數）
+      ()=>{ const a=rand(50,200),b=rand(50,200),g=rand(3,9); const tot=a+b; const each=Math.floor(tot/g),rem=tot%g; return { html:`紅氣球 ${a} 顆，藍氣球 ${b} 顆，全部混合後每 ${g} 顆裝一袋，最多裝幾袋？還剩幾顆？`, answer:`① ${a} + ${b} = ${tot} 顆　② ${tot} ÷ ${g} = ${each} 袋⋯${rem} 顆` }; },
+      // (減法) ÷ 除數（有餘數）
+      ()=>{ const tot=rand(300,700),give=rand(50,100),g=rand(3,8); const rem2=(tot-give)%g; const each=Math.floor((tot-give)/g); return { html:`倉庫有 ${tot} 個蘋果，先取出 ${give} 個後，剩下的每 ${g} 個裝一箱，最多裝幾箱？還剩幾個？`, answer:`① ${tot} - ${give} = ${tot-give} 個　② ${tot-give} ÷ ${g} = ${each} 箱⋯${rem2} 個` }; },
+      // 除法 + 加法
+      ()=>{ const tot=rand(100,500),g=rand(2,8),bonus=rand(10,50); const each=Math.floor(tot/g); return { html:`${tot} 本故事書平分給 ${g} 班，後來老師又多給每班 ${bonus} 本，現在每班共有幾本？`, answer:`① ${tot} ÷ ${g} = ${each} 本　② ${each} + ${bonus} = ${each+bonus} 本` }; },
+      // 除法 + 減法
+      ()=>{ const tot=rand(100,500),g=rand(2,8),less=rand(5,30); const each=Math.floor(tot/g); return { html:`工廠生產了 ${tot} 個玩具，平分給 ${g} 個商店，每個商店又退回了 ${less} 個，最後每店剩幾個？`, answer:`① ${tot} ÷ ${g} = ${each} 個　② ${each} - ${less} = ${each-less} 個` }; },
+      // (加法) ÷ 除數（生活情境）
+      ()=>{ const p1=rand(100,300),p2=rand(80,200),g=rand(2,6); const each=Math.floor((p1+p2)/g); return { html:`哥哥有 ${p1} 元，妹妹有 ${p2} 元，兩人合起來平分成 ${g} 份存入存錢筒，每份幾元？`, answer:`① ${p1} + ${p2} = ${p1+p2} 元　② ${p1+p2} ÷ ${g} = ${each} 元` }; },
+      // (減法) ÷ 除數（生活情境）
+      ()=>{ const full=rand(200,600),eaten=rand(30,100),g=rand(3,8); const each=Math.floor((full-eaten)/g); return { html:`一桶餅乾有 ${full} 片，吃掉了 ${eaten} 片後，剩下的平分裝成 ${g} 小包，每包幾片？`, answer:`① ${full} - ${eaten} = ${full-eaten} 片　② ${full-eaten} ÷ ${g} = ${each} 片` }; },
+      // 除法 + 加法（生活情境）
+      ()=>{ const tot=rand(150,500),g=rand(2,7),add=rand(10,40); const each=Math.floor(tot/g); return { html:`學校買了 ${tot} 枝鉛筆，平均分給 ${g} 個班級，後來每班再補充了 ${add} 枝，每班現在共有幾枝？`, answer:`① ${tot} ÷ ${g} = ${each} 枝　② ${each} + ${add} = ${each+add} 枝` }; },
+      // 除法 + 減法（生活情境）
+      ()=>{ const tot=rand(200,600),g=rand(2,8),used=rand(5,25); const each=Math.floor(tot/g); return { html:`花店有 ${tot} 朵花，平均分成 ${g} 束，每束再取出 ${used} 朵做裝飾，每束剩幾朵？`, answer:`① ${tot} ÷ ${g} = ${each} 朵　② ${each} - ${used} = ${each-used} 朵` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 5b 加減與乘法兩步驟 ──
+  '5b': () => {
+    // 每題都是真正的兩步驟：加減 + 乘法，或 乘法 + 加減
+    const problems = [
+      // 加法 → 乘法
+      ()=>{ const a=rand(3,8),b=rand(2,5),n=rand(3,7); const unit=pick(['顆','個','片','條']); const item=pick(['糖果','餅乾','貼紙','橡皮擦']); return { html:`哥哥有 ${a} 個${item}，妹妹比哥哥多 ${b} 個，媽媽買了 ${n} 份這樣的量給同學，共有幾個${item}？`, answer:`① ${a} + ${b} = ${a+b} 個　② ${a+b} × ${n} = ${(a+b)*n} 個` }; },
+      // 減法 → 乘法
+      ()=>{ const ori=rand(10,20),less=rand(2,6),n=rand(3,8); return { html:`原本每包有 ${ori} 顆糖，取出 ${less} 顆後，這樣的包裝買了 ${n} 包，共剩幾顆糖？`, answer:`① ${ori} - ${less} = ${ori-less} 顆　② ${ori-less} × ${n} = ${(ori-less)*n} 顆` }; },
+      // 乘法 → 加法
+      ()=>{ const p=rand(20,80),n=rand(3,8),bonus=rand(10,50); return { html:`每天存 ${p} 元，存了 ${n} 天，再加上奶奶給的 ${bonus} 元零用錢，共有幾元？`, answer:`① ${p} × ${n} = ${p*n} 元　② ${p*n} + ${bonus} = ${p*n+bonus} 元` }; },
+      // 乘法 → 減法
+      ()=>{ const p=rand(30,100),n=rand(3,8),used=rand(20,80); return { html:`一包糖果有 ${p} 顆，買了 ${n} 包後，送給朋友 ${used} 顆，還剩幾顆？`, answer:`① ${p} × ${n} = ${p*n} 顆　② ${p*n} - ${used} = ${p*n-used} 顆` }; },
+      // 加法 → 乘法（錢的情境）
+      ()=>{ const a=rand(5,15),b=rand(3,8),n=rand(4,9); return { html:`一個蘋果 ${a} 元，一個橘子 ${b} 元，買了各 ${n} 個，蘋果和橘子各花了多少元？共花幾元？`, answer:`① ${a} × ${n} = ${a*n} 元；${b} × ${n} = ${b*n} 元　② ${a*n} + ${b*n} = ${(a+b)*n} 元` }; },
+      // 減法 → 乘法（情境）
+      ()=>{ const ori=rand(15,30),less=rand(3,8),n=rand(4,9); return { html:`老師原本準備了 ${ori} 張獎勵貼紙要發給每位同學，後來減少了 ${less} 張，這樣的份量要發給 ${n} 位同學，共需要幾張貼紙？`, answer:`① ${ori} - ${less} = ${ori-less} 張　② ${ori-less} × ${n} = ${(ori-less)*n} 張` }; },
+      // 乘法 → 加法（時間情境）
+      ()=>{ const perday=rand(20,60),days=rand(3,7),extra=rand(10,30); return { html:`小花每天練琴 ${perday} 分鐘，練了 ${days} 天，這週又額外多練了 ${extra} 分鐘，共練了幾分鐘？`, answer:`① ${perday} × ${days} = ${perday*days} 分鐘　② ${perday*days} + ${extra} = ${perday*days+extra} 分鐘` }; },
+      // 乘法 → 減法（購物情境）
+      ()=>{ const price=rand(50,150),n=rand(3,6),disc=rand(20,80); return { html:`每件T恤 ${price} 元，買了 ${n} 件，結帳時折扣了 ${disc} 元，實際付幾元？`, answer:`① ${price} × ${n} = ${price*n} 元　② ${price*n} - ${disc} = ${price*n-disc} 元` }; },
+      // 加法 → 乘法（分組情境）
+      ()=>{ const g1=rand(3,8),g2=rand(2,5),each=rand(4,10); return { html:`男生有 ${g1} 組，女生有 ${g2} 組，每組都有 ${each} 人，全部共有幾人？`, answer:`① ${g1} + ${g2} = ${g1+g2} 組　② ${g1+g2} × ${each} = ${(g1+g2)*each} 人` }; },
+      // 乘法 → 減法（食物情境）
+      ()=>{ const each=rand(8,20),n=rand(4,8),given=rand(10,40); return { html:`媽媽做了 ${n} 盤餅乾，每盤有 ${each} 塊，分送給鄰居 ${given} 塊後，還剩幾塊？`, answer:`① ${each} × ${n} = ${each*n} 塊　② ${each*n} - ${given} = ${each*n-given} 塊` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 5c 兩步驟混合應用 ──
+  '5c': () => {
+    const problems = [
+      ()=>{ const p1=rand(50,200),p2=rand(20,80),n=rand(2,6); return { html:`買了 ${n} 個 ${p1} 元的蘋果，和一個 ${p2} 元的橘子，共花幾元？`, answer:`${p1} × ${n} + ${p2} = ${p1*n+p2} 元` }; },
+      ()=>{ const tot=rand(300,700),n=rand(3,6),each=rand(30,80); const rem=tot-n*each; return { html:`媽媽帶 ${tot} 元，買了 ${n} 件 ${each} 元的東西，還剩幾元？`, answer:`${tot} - ${each} × ${n} = ${tot-each*n} 元` }; },
+      ()=>{ const a=rand(100,300),b=rand(50,150),g=rand(3,7); const each=Math.floor((a+b)/g); return { html:`紅色氣球 ${a} 個，藍色氣球 ${b} 個，平分給 ${g} 個班，每班幾個？`, answer:`(${a}+${b}) ÷ ${g} = ${each} 個` }; },
+      ()=>{ const boxes=rand(4,8),perbox=rand(6,12),ate=rand(5,20); return { html:`有 ${boxes} 箱巧克力，每箱 ${perbox} 顆，吃掉 ${ate} 顆，還剩幾顆？`, answer:`${boxes} × ${perbox} - ${ate} = ${boxes*perbox-ate} 顆` }; },
+      ()=>{ const p=rand(50,150),buy=rand(3,6),coup=rand(20,50); return { html:`每本書 ${p} 元，買了 ${buy} 本，使用 ${coup} 元折價券，需付幾元？`, answer:`${p} × ${buy} - ${coup} = ${p*buy-coup} 元` }; },
+      ()=>{ const n=rand(4,8),each=rand(5,15),g=rand(2,5); const tot=n*each; return { html:`買了 ${n} 包零食，每包 ${each} 元，${g} 個人平分費用，每人付幾元？`, answer:`(${n} × ${each}) ÷ ${g} = ${tot/g} 元` }; },
+      ()=>{ const p=rand(100,300),n1=rand(2,5),n2=rand(2,5); return { html:`媽媽買了 ${n1} 件 ${p} 元的衣服，爸爸買了 ${n2} 件同款，共花幾元？`, answer:`${p} × (${n1}+${n2}) = ${p*(n1+n2)} 元` }; },
+      ()=>{ const daily=rand(20,60),d=rand(3,7),plus=rand(10,30); return { html:`每天運動 ${daily} 分鐘，${d} 天後，多跑了 ${plus} 分鐘，共運動幾分鐘？`, answer:`${daily} × ${d} + ${plus} = ${daily*d+plus} 分鐘` }; },
+      ()=>{ const tot=rand(500,1000),item=rand(100,200),n=rand(2,4); const rem=tot-item*n; return { html:`有 ${tot} 元，買了 ${n} 個 ${item} 元的玩具，剩下的錢可以買幾元以內的東西？`, answer:`${tot} - ${item} × ${n} = ${tot-item*n} 元` }; },
+      ()=>{ const n=rand(6,8),ppl=rand(6,12),price=rand(6,15),less=rand(1,3); return { html:`點餐：${n} 人各點一份 ${price} 元的餐，但用優惠券每份少 ${less} 元，共花幾元？`, answer:`(${price}-${less}) × ${n} = ${(price-less)*n} 元` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 6a 認識一位小數 ──
+  '6a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,3);
+      if (type===0) {
+        const n=rand(1,9);
+        qs.push({ html:`${n} 個 0.1 合起來是（ ）`, answer:`0.${n}` });
+      } else if (type===1) {
+        const w=rand(1,9),d=rand(1,9);
+        qs.push({ html:`${w} 個 1 和 ${d} 個 0.1 合起來是（ ）`, answer:`${w}.${d}` });
+      } else if (type===2) {
+        const v=(rand(11,99)/10).toFixed(1);
+        qs.push({ html:`<strong>${v}</strong> 是幾個 0.1？`, answer:`${Math.round(parseFloat(v)*10)} 個 0.1` });
+      } else {
+        const v=(rand(10,99)/10).toFixed(1);
+        qs.push({ html:`<strong>${v}</strong> 的十分位數字是（ ），個位數字是（ ）`, answer:`十分位：${v.split('.')[1]}，個位：${v.split('.')[0]}` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 6b 小數大小比較 ──
+  '6b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const a=(rand(0,9)*10+rand(0,9))/10;
+      const b=(rand(0,9)*10+rand(0,9))/10;
+      if(a===b){i--;continue;}
+      const sym=a>b?'>':a<b?'<':'=';
+      qs.push({ html:`在（ ）中填入 ＜、＝ 或 ＞：<br><strong>${a.toFixed(1)}（ ）${b.toFixed(1)}</strong>`, answer:`${a.toFixed(1)} ${sym} ${b.toFixed(1)}` });
+    }
+    return qs;
+  },
+
+  // ── 6c 小數加減 ──
+  '6c': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,2);
+      if (type===0) {
+        const a=rand(0,99)/10,b=rand(0,99)/10;
+        const ans=(a+b).toFixed(1);
+        qs.push({ html:`算算看：<strong>${a.toFixed(1)} ＋ ${b.toFixed(1)} ＝ （ ）</strong>`, answer:`${ans}` });
+      } else if (type===1) {
+        let a=rand(10,99)/10,b=rand(0,Math.floor(a*10))/10;
+        const ans=(a-b).toFixed(1);
+        qs.push({ html:`算算看：<strong>${a.toFixed(1)} － ${b.toFixed(1)} ＝ （ ）</strong>`, answer:`${ans}` });
+      } else {
+        const b=rand(0,99)/10,ans=rand(10,99)/10;
+        const a=(ans+b).toFixed(1);
+        qs.push({ html:`算算看：<strong>（ ）＋ ${b.toFixed(1)} ＝ ${(parseFloat(a)).toFixed(1)}</strong>`, answer:`${ans.toFixed(1)}` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 6d 小數的應用 ──
+  '6d': () => {
+    // 生活情境名詞庫
+    const people = [['媽媽','爸爸'],['哥哥','妹妹'],['小明','小花'],['奶奶','爺爺'],['皮皮','美美']];
+    const animals = ['小狗','小貓','兔子','倉鼠'];
+    const vegs = ['番茄','紅蘿蔔','馬鈴薯','地瓜'];
+    const fruits = ['蘋果','香蕉','芒果','西瓜'];
+
+    const problems = [
+      // 體重加法
+      () => {
+        const [p1,p2] = pick(people);
+        const a = (rand(20,50)/10*10/10).toFixed(1); // e.g. 25.3
+        const w1 = (rand(200,450)/10).toFixed(1);
+        const w2 = (rand(100,300)/10).toFixed(1);
+        const ans = (parseFloat(w1)+parseFloat(w2)).toFixed(1);
+        return { html:`${p1}體重 ${w1} 公斤，${p2}體重 ${w2} 公斤，兩人合計體重是幾公斤？`, answer:`${w1} ＋ ${w2} ＝ ${ans} 公斤` };
+      },
+      // 身高差
+      () => {
+        const [p1,p2] = pick(people);
+        const h1 = (rand(1200,1600)/10).toFixed(1);
+        const h2 = (rand(900,parseInt(h1*10)-10)/10).toFixed(1);
+        const ans = (parseFloat(h1)-parseFloat(h2)).toFixed(1);
+        return { html:`${p1}身高 ${h1} 公分，${p2}身高 ${h2} 公分，${p1}比${p2}高幾公分？`, answer:`${h1} － ${h2} ＝ ${ans} 公分` };
+      },
+      // 長度加法（緞帶）
+      () => {
+        const a = (rand(10,80)/10).toFixed(1);
+        const b = (rand(5,50)/10).toFixed(1);
+        const ans = (parseFloat(a)+parseFloat(b)).toFixed(1);
+        return { html:`一條紅緞帶長 ${a} 公尺，一條藍緞帶長 ${b} 公尺，兩條合起來共有幾公尺？`, answer:`${a} ＋ ${b} ＝ ${ans} 公尺` };
+      },
+      // 長度剩餘（鐵絲）
+      () => {
+        const total = (rand(30,90)/10).toFixed(1);
+        const used = (rand(10, Math.floor(parseFloat(total)*10)-5)/10).toFixed(1);
+        const ans = (parseFloat(total)-parseFloat(used)).toFixed(1);
+        return { html:`一條鐵絲長 ${total} 公尺，用掉了 ${used} 公尺，還剩幾公尺？`, answer:`${total} － ${used} ＝ ${ans} 公尺` };
+      },
+      // 重量加法（蔬菜）
+      () => {
+        const v = pick(vegs);
+        const a = (rand(5,30)/10).toFixed(1);
+        const b = (rand(5,30)/10).toFixed(1);
+        const ans = (parseFloat(a)+parseFloat(b)).toFixed(1);
+        return { html:`媽媽買了 ${a} 公斤的${v}和 ${b} 公斤的${pick(vegs)}，共買了幾公斤的蔬菜？`, answer:`${a} ＋ ${b} ＝ ${ans} 公斤` };
+      },
+      // 重量剩餘（水果）
+      () => {
+        const f = pick(fruits);
+        const total = (rand(20,80)/10).toFixed(1);
+        const eat = (rand(5, Math.floor(parseFloat(total)*10)-5)/10).toFixed(1);
+        const ans = (parseFloat(total)-parseFloat(eat)).toFixed(1);
+        return { html:`家裡有 ${total} 公斤的${f}，吃掉了 ${eat} 公斤，還剩幾公斤？`, answer:`${total} － ${eat} ＝ ${ans} 公斤` };
+      },
+      // 溫度差
+      () => {
+        const morning = (rand(150,220)/10).toFixed(1);
+        const noon = (rand(parseInt(morning*10)+10, 380)/10).toFixed(1);
+        const ans = (parseFloat(noon)-parseFloat(morning)).toFixed(1);
+        return { html:`早上氣溫是 ${morning} 度，中午氣溫是 ${noon} 度，中午比早上高幾度？`, answer:`${noon} － ${morning} ＝ ${ans} 度` };
+      },
+      // 比較誰重（動物）
+      () => {
+        const a1 = pick(animals), a2 = pick(animals);
+        const w1 = (rand(5,40)/10).toFixed(1);
+        const w2 = (rand(5,40)/10).toFixed(1);
+        const diff = Math.abs(parseFloat(w1)-parseFloat(w2)).toFixed(1);
+        const heavier = parseFloat(w1)>parseFloat(w2)?a1:parseFloat(w1)<parseFloat(w2)?a2:'一樣重';
+        return { html:`${a1}重 ${w1} 公斤，${a2}重 ${w2} 公斤，哪隻比較重？重幾公斤？`, answer:`${parseFloat(w1)>parseFloat(w2)?a1:a2} 比較重，重了 ${diff} 公斤` };
+      },
+      // 找零錢（小數金額）
+      () => {
+        const price = (rand(10,90)/10).toFixed(1);
+        const pay = (Math.ceil(parseFloat(price))).toFixed(1);
+        const change = (parseFloat(pay)-parseFloat(price)).toFixed(1);
+        return { html:`一個麵包賣 ${price} 元，小明付了 ${pay} 元，應該找回幾元？`, answer:`${pay} － ${price} ＝ ${change} 元` };
+      },
+      // 兩段距離合計
+      () => {
+        const d1 = (rand(10,60)/10).toFixed(1);
+        const d2 = (rand(10,60)/10).toFixed(1);
+        const ans = (parseFloat(d1)+parseFloat(d2)).toFixed(1);
+        return { html:`小明從家裡走 ${d1} 公里到公園，再走 ${d2} 公里到學校，共走了幾公里？`, answer:`${d1} ＋ ${d2} ＝ ${ans} 公里` };
+      },
+      // 速度比較
+      () => {
+        const [p1,p2] = pick(people);
+        // 確保兩個速度不相等
+        let s1, s2;
+        do {
+          s1 = (rand(15,80)/10).toFixed(1);
+          s2 = (rand(15,80)/10).toFixed(1);
+        } while (s1 === s2);
+        const faster = parseFloat(s1) > parseFloat(s2) ? p1 : p2;
+        const slower = parseFloat(s1) > parseFloat(s2) ? p2 : p1;
+        const fasterSpeed = parseFloat(s1) > parseFloat(s2) ? s1 : s2;
+        const slowerSpeed = parseFloat(s1) > parseFloat(s2) ? s2 : s1;
+        const diff = (parseFloat(fasterSpeed) - parseFloat(slowerSpeed)).toFixed(1);
+        // 隨機問「快多少」或「慢多少」
+        const askFaster = pick([true, false]);
+        if (askFaster) {
+          return {
+            html: `${p1}跑步速度是每秒 ${s1} 公尺，${p2}跑步速度是每秒 ${s2} 公尺。<br>${faster} 每秒比 ${slower} 快幾公尺？`,
+            answer: `${fasterSpeed} － ${slowerSpeed} ＝ ${diff} 公尺，${faster} 每秒比 ${slower} 快 ${diff} 公尺`
+          };
+        } else {
+          return {
+            html: `${p1}跑步速度是每秒 ${s1} 公尺，${p2}跑步速度是每秒 ${s2} 公尺。<br>${slower} 每秒比 ${faster} 慢幾公尺？`,
+            answer: `${fasterSpeed} － ${slowerSpeed} ＝ ${diff} 公尺，${slower} 每秒比 ${faster} 慢 ${diff} 公尺`
+          };
+        }
+      },
+      // 原來多少（加法逆推）
+      () => {
+        const added = (rand(5,30)/10).toFixed(1);
+        const after = (rand(20,80)/10).toFixed(1);
+        const before = (parseFloat(after)-parseFloat(added)).toFixed(1);
+        return { html:`小花喝了 ${added} 公升的水後，水壺裡還剩 ${after} 公升，原來水壺裡有幾公升的水？`, answer:`${after} ＋ ${added} ＝ ${(parseFloat(after)+parseFloat(added)).toFixed(1)} 公升` };
+      },
+
+      // ── 新增困難題型 ──
+
+      // 重量連鎖比較（皆較重）：A比B重x，B比C重y → A比C重多少
+      () => {
+        const nameSets = [['小明','小花','小華'],['哥哥','妹妹','弟弟'],['阿志','阿美','小偉'],['皮皮','美美','丹丹']];
+        const [A,B,C] = pick(nameSets);
+        // 確保 x、y 差異明顯（x 範圍 1.0~2.5，y 範圍 0.5~1.5，避免太接近）
+        const x = (rand(10,25)/10).toFixed(1);
+        const y = (rand(5,15)/10).toFixed(1);
+        const ans = (parseFloat(x)+parseFloat(y)).toFixed(1);
+        // 隨機情境
+        const ctx = pick([
+          `在市場買東西後`,
+          `量完體重後`,
+          `背著書包時`,
+          `帶著行李時`,
+        ]);
+        return {
+          hard: true,
+          html: `${ctx}，${A} 比 ${B} 重 ${x} 公斤，${B} 比 ${C} 重 ${y} 公斤。<br>請問 ${A} 比 ${C} 重幾公斤？寫出做法和答案。`,
+          answer: `① ${A} 比 ${B} 重 ${x} 公斤，${B} 比 ${C} 重 ${y} 公斤<br>② ${x} ＋ ${y} ＝ ${ans} 公斤<br>答：${A} 比 ${C} 重 ${ans} 公斤`
+        };
+      },
+
+      // 重量連鎖比較（皆較輕）：A比B輕x，B比C輕y → A比C輕多少
+      () => {
+        const nameSets = [['小明','小花','小華'],['哥哥','妹妹','弟弟'],['阿志','阿美','小偉'],['皮皮','美美','丹丹']];
+        const [A,B,C] = pick(nameSets);
+        // x 範圍 0.5~1.5，y 範圍 1.5~3.5，確保與上一題數字感不同
+        const x = (rand(5,15)/10).toFixed(1);
+        const y = (rand(15,35)/10).toFixed(1);
+        const ans = (parseFloat(x)+parseFloat(y)).toFixed(1);
+        const items = pick(['南瓜','西瓜','冬瓜','哈密瓜']);
+        return {
+          hard: true,
+          html: `媽媽買了三顆${items}，${A} 比 ${B} 輕 ${x} 公斤，${B} 比 ${C} 輕 ${y} 公斤。<br>請問 ${A} 比 ${C} 輕幾公斤？寫出做法和答案。`,
+          answer: `① ${A} 比 ${B} 輕 ${x} 公斤，${B} 比 ${C} 輕 ${y} 公斤<br>② ${x} ＋ ${y} ＝ ${ans} 公斤<br>答：${A} 比 ${C} 輕 ${ans} 公斤`
+        };
+      },
+
+      // 重量連鎖混合：A比B重x，B比C輕y → A比C誰重？差多少
+      () => {
+        const nameSets = [['小明','小花','小華'],['哥哥','妹妹','弟弟'],['阿志','阿美','小偉'],['皮皮','美美','丹丹']];
+        const [A,B,C] = pick(nameSets);
+        // 確保 x、y 差距夠大（相差至少 0.5），結果不會是 0
+        let x, y;
+        do {
+          x = (rand(8,30)/10).toFixed(1);
+          y = (rand(5,25)/10).toFixed(1);
+        } while (x === y || Math.abs(parseFloat(x)-parseFloat(y)) < 0.4);
+        const diff = (parseFloat(x)-parseFloat(y)).toFixed(1);
+        const absDiff = Math.abs(parseFloat(diff)).toFixed(1);
+        const relation = parseFloat(diff) > 0
+          ? `${A} 比 ${C} 重 ${absDiff} 公斤`
+          : `${A} 比 ${C} 輕 ${absDiff} 公斤`;
+        const ctx = pick(['運動會秤重後','健康檢查時','爬山背包重量']);
+        return {
+          hard: true,
+          html: `${ctx}，${A} 比 ${B} 重 ${x} 公斤，但 ${B} 比 ${C} 輕 ${y} 公斤。<br>請問 ${A} 和 ${C} 誰比較重？差幾公斤？寫出做法和答案。`,
+          answer: `① ${A} 比 ${B} 重 ${x} 公斤，${C} 比 ${B} 重 ${y} 公斤<br>② ${x} － ${y} ＝ ${diff} 公斤<br>答：${relation}`
+        };
+      },
+
+      // 動物距離：往前走兩段，問離起點多遠（公分）
+      () => {
+        const animal = pick(['小兔子','小烏龜','小螞蟻','小蝸牛','小青蛙']);
+        const d1 = (rand(10,80)/10).toFixed(1);
+        const d2 = (rand(5,50)/10).toFixed(1);
+        const ans = (parseFloat(d1)+parseFloat(d2)).toFixed(1);
+        return {
+          hard: true,
+          html: `${animal}從起點往前走了 ${d1} 公尺，又繼續往前走了 ${d2} 公尺。<br>請問${animal}距離起點有多遠？`,
+          answer: `${d1} ＋ ${d2} ＝ ${ans} 公尺<br>答：${animal}距離起點 ${ans} 公尺`
+        };
+      },
+
+      // 動物距離：往前再往後，結果只能≥0（不低於起點）
+      () => {
+        const animal = pick(['小兔子','小烏龜','小螞蟻','小蝸牛','小青蛙']);
+        const forward = (rand(20,90)/10).toFixed(1);
+        const back = (rand(5, Math.floor(parseFloat(forward)*10))/10).toFixed(1);
+        const ans = (parseFloat(forward)-parseFloat(back)).toFixed(1);
+        return {
+          hard: true,
+          html: `${animal}從起點往前走了 ${forward} 公尺，又往後走了 ${back} 公尺。<br>請問${animal}現在距離起點有多遠？`,
+          answer: `${forward} － ${back} ＝ ${ans} 公尺<br>答：${animal}現在距離起點 ${ans} 公尺`
+        };
+      },
+
+      // 動物距離：單位換算（公分→公尺）
+      () => {
+        const animal = pick(['小兔子','小烏龜','小螞蟻','小蝸牛','小青蛙']);
+        const cm1 = rand(20,80)*10;
+        const cm2 = rand(10,50)*10;
+        const totalCm = cm1 + cm2;
+        const totalM = (totalCm/100).toFixed(1);
+        return {
+          hard: true,
+          html: `${animal}從起點往前走了 ${cm1} 公分，又往前走了 ${cm2} 公分。<br>（1）${animal}距離起點幾公分？<br>（2）換算成公尺是幾公尺？`,
+          answer: `（1）${cm1} ＋ ${cm2} ＝ ${totalCm} 公分<br>（2）${totalCm} 公分 ＝ ${totalM} 公尺`
+        };
+      },
+
+      // 四位小孩體重綜合題：先給定體重，問三個子題
+      () => {
+        const kidSets = [
+          ['小明','小花','小偉','小芳'],
+          ['阿志','阿美','小丹','小宇'],
+          ['皮皮','美美','丹丹','山山']
+        ];
+        const kids = pick(kidSets);
+
+        // 四位小孩的體重（不重複）
+        let bodyW;
+        do {
+          bodyW = kids.map(() => parseFloat((rand(200,500)/10).toFixed(1)));
+        } while (new Set(bodyW).size < 4);
+
+        // 四位各自書包重量（不重複）
+        let bookW;
+        do {
+          bookW = kids.map(() => parseFloat((rand(15,50)/10).toFixed(1)));
+        } while (new Set(bookW).size < 4);
+
+        // 計算（1）：體重最重最輕
+        const maxBody = Math.max(...bodyW);
+        const minBody = Math.min(...bodyW);
+        const heaviestBody = kids[bodyW.indexOf(maxBody)];
+        const lightestBody = kids[bodyW.indexOf(minBody)];
+        const diffBody = (maxBody - minBody).toFixed(1);
+
+        // 計算（2）：體重＋書包 的總重，誰最重誰最輕
+        const totalW = kids.map((_, i) => parseFloat((bodyW[i] + bookW[i]).toFixed(1)));
+        const maxTotal = Math.max(...totalW);
+        const minTotal = Math.min(...totalW);
+        const heaviestTotal = kids[totalW.indexOf(maxTotal)];
+        const lightestTotal = kids[totalW.indexOf(minTotal)];
+
+        // 計算（3）：書包最重的那位，再加上隨機午餐盒
+        const maxBook = Math.max(...bookW);
+        const focusIdx = bookW.indexOf(maxBook);
+        const focusKid = kids[focusIdx];
+        const focusBody = bodyW[focusIdx].toFixed(1);
+        const focusBook = bookW[focusIdx].toFixed(1);
+        const lunchW = parseFloat((rand(5,20)/10).toFixed(1));
+        const focusTotal = (bodyW[focusIdx] + bookW[focusIdx] + lunchW).toFixed(1);
+
+        // 顯示資料表格
+        const bodyRows = kids.map((k,i) => `${k} ${bodyW[i].toFixed(1)} 公斤`).join('、');
+        const bookRows = kids.map((k,i) => `${k} ${bookW[i].toFixed(1)} 公斤`).join('、');
+        const totalRows = kids.map((k,i) => `${k} ${totalW[i].toFixed(1)} 公斤`).join('、');
+
+        return {
+          hard: true,
+          html: `
+            下表是四位同學的體重和書包重量：<br>
+            <div style="margin:8px 0;background:#f0f7ff;border-radius:8px;padding:10px;font-size:14px;line-height:2">
+              體重：${bodyRows}<br>
+              書包：${bookRows}
+            </div>
+            （1）四位同學中，誰的體重最重？誰最輕？最重和最輕相差幾公斤？<br>
+            （2）四位同學帶著書包去量體重，誰最重？誰最輕？<br>
+            （3）${focusKid}的書包最重，今天又帶了 ${lunchW.toFixed(1)} 公斤的午餐盒，請問${focusKid}加上書包和午餐盒合計重幾公斤？
+          `,
+          answer: `
+            （1）${heaviestBody} 最重 ${maxBody.toFixed(1)} 公斤，${lightestBody} 最輕 ${minBody.toFixed(1)} 公斤；${maxBody.toFixed(1)} － ${minBody.toFixed(1)} ＝ ${diffBody} 公斤<br>
+            （2）帶書包後各自重量：${totalRows}<br>
+            　　 ${heaviestTotal} 最重 ${maxTotal.toFixed(1)} 公斤，${lightestTotal} 最輕 ${minTotal.toFixed(1)} 公斤<br>
+            （3）${focusBody} ＋ ${focusBook} ＋ ${lunchW.toFixed(1)} ＝ ${focusTotal} 公斤
+          `
+        };
+      },
+    ];
+
+    // 偏難題型（索引 11～16）：重量連鎖、動物往後/換算、四位體重綜合
+    const easyProblems  = problems.slice(0, 11);  // 0~10：基礎題
+    const hardProblems  = problems.slice(11);      // 11~16：偏難題
+
+    // Fisher-Yates 洗牌
+    const shuffle = arr => {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    };
+
+    // 確保偏難題出現 2～3 題
+    const hardCount = rand(2, 3);
+    const easyCount = 10 - hardCount;
+
+    const pickedHard = shuffle(hardProblems).slice(0, hardCount);
+    const pickedEasy = shuffle(easyProblems).slice(0, easyCount);
+
+    // 合併後再洗牌（讓難易題位置隨機散布）
+    const final = shuffle([...pickedEasy, ...pickedHard]);
+    return final.map(p => p());
+  },
+
+  // ── 7a 24小時換算 ──
+  '7a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,2);
+      if (type===0) {
+        const h=rand(1,11),ampm=pick(['AM','PM']);
+        const h24=ampm==='AM'?h:h+12;
+        qs.push({ html:`上午/下午 ${h} 時（${ampm}）用24時制是幾時？`, answer:`${h24} 時` });
+      } else if (type===1) {
+        const h=rand(13,23);
+        const h12=h-12;
+        qs.push({ html:`24時制的 ${h} 時，用12時制是下午幾時？`, answer:`下午 ${h12} 時（PM ${h12}:00）` });
+      } else {
+        const h=rand(0,23),m=rand(0,59);
+        const mStr=m<10?'0'+m:''+m;
+        qs.push({ html:`時刻表上寫著 <strong>${h}:${mStr}</strong>，是指什麼時候？`, answer:`24時制的 ${h} 時 ${m} 分（${h<12?'上午':'下午'}${h<=12?h:h-12} 時 ${m} 分）` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 7b 小時與分鐘換算 ──
+  '7b': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type = rand(0,3);
+      if (type===0) {
+        const h=rand(1,9);
+        qs.push({ html:`${h} 小時 ＝ （ ）分鐘`, answer:`${h*60} 分鐘` });
+      } else if (type===1) {
+        const m=rand(2,9)*60;
+        qs.push({ html:`${m} 分鐘 ＝ （ ）小時`, answer:`${m/60} 小時` });
+      } else if (type===2) {
+        const h=rand(1,5),m=rand(1,59);
+        qs.push({ html:`${h} 小時 ${m} 分鐘 ＝ （ ）分鐘`, answer:`${h*60+m} 分鐘` });
+      } else {
+        const tot=rand(70,300);
+        const h=Math.floor(tot/60),m=tot%60;
+        qs.push({ html:`${tot} 分鐘 ＝ （ ）小時（ ）分鐘`, answer:`${h} 小時 ${m} 分鐘` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 7c 時間的計算 ──
+  '7c': () => {
+    const problems = [
+      ()=>{ const sh=rand(8,12),sm=rand(0,5)*10,em=sm+rand(1,5)*10; const eh=sh+(em>=60?1:0),fm=em%60; return { html:`從上午 ${sh} 時 ${sm} 分到上午 ${eh} 時 ${fm} 分，經過了幾分鐘？`, answer:`${fm+60*(eh-sh)-sm} 分鐘` }; },
+      ()=>{ const h=rand(8,14),m=rand(5,9)*10,dur=rand(30,90); const endMin=m+dur,endH=h+Math.floor(endMin/60),fm=endMin%60; return { html:`上午 ${h} 時 ${m} 分開始，${dur} 分鐘後結束，幾時幾分結束？`, answer:`${endH} 時 ${fm} 分` }; },
+      ()=>{ const durH=rand(1,3),durM=rand(10,50),endH=rand(14,19),endM=rand(10,50); const startMin=endH*60+endM-durH*60-durM; const sh=Math.floor(startMin/60),sm=startMin%60; return { html:`${endH} 時 ${endM} 分結束，花了 ${durH} 小時 ${durM} 分鐘，幾時幾分開始？`, answer:`${sh} 時 ${sm} 分` }; },
+      ()=>{ const a_h=rand(8,10),a_m=rand(0,5)*10,b_h=rand(11,14),b_m=rand(0,5)*10; const diff=(b_h-a_h)*60+(b_m-a_m); return { html:`上午 ${a_h} 時 ${a_m} 分出門，${b_h} 時 ${b_m} 分回家，外出了幾小時幾分鐘？`, answer:`${Math.floor(diff/60)} 小時 ${diff%60} 分鐘` }; },
+      ()=>{ const h=rand(13,16),m=rand(5,9)*10,dur=rand(20,60); const endMin=h*60+m+dur,eh=Math.floor(endMin/60),em=endMin%60; return { html:`下午 ${h-12} 時 ${m} 分開始上課，上了 ${dur} 分鐘，幾時幾分下課（用24時制）？`, answer:`${eh} 時 ${em} 分` }; },
+      ()=>{ const a=rand(50,90),b=rand(30,60); return { html:`哥哥剪輯影片用了 ${a} 分鐘，練舞用了 ${b} 分鐘，剪片比練舞多幾分鐘？`, answer:`${a} - ${b} = ${a-b} 分鐘` }; },
+      ()=>{ const h=rand(9,11),m=rand(0,5)*10,dur=rand(1,3)*60+rand(0,5)*10; const endMin=h*60+m+dur,eh=Math.floor(endMin/60),em=endMin%60; return { html:`上午 ${h} 時 ${m} 分搭火車，車程 ${Math.floor(dur/60)} 小時 ${dur%60} 分鐘，幾時幾分抵達？`, answer:`${eh} 時 ${em} 分` }; },
+      ()=>{ const h1=rand(1,3),m1=rand(10,50),h2=rand(1,3),m2=rand(10,50); const t1=h1*60+m1,t2=h2*60+m2,tot=t1+t2; return { html:`做功課花了 ${h1} 小時 ${m1} 分鐘，再練鋼琴 ${h2} 小時 ${m2} 分鐘，共花了幾小時幾分鐘？`, answer:`${Math.floor(tot/60)} 小時 ${tot%60} 分鐘` }; },
+      ()=>{ const sh=rand(7,9),sm=rand(0,5)*10,eh=rand(10,12),em=rand(0,5)*10; const diff=(eh-sh)*60+(em-sm); return { html:`上午 ${sh} 時 ${sm} 分開始工作，${eh} 時 ${em} 分休息，工作了幾小時幾分鐘？`, answer:`${Math.floor(diff/60)} 小時 ${diff%60} 分鐘` }; },
+      ()=>{ const endH=rand(15,18),endM=rand(0,5)*10,dur=rand(30,90); const startMin=endH*60+endM-dur,sh=Math.floor(startMin/60),sm=startMin%60; return { html:`下午 ${endH-12} 時 ${endM} 分（${endH}:${endM<10?'0'+endM:endM}）比賽結束，比賽進行了 ${dur} 分鐘，幾時幾分開始？`, answer:`${sh} 時 ${sm} 分` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 8a 乘除關係 ──
+  '8a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const a=rand(2,9),b=rand(10,99),prod=a*b;
+      const type=rand(0,2);
+      if (type===0) {
+        qs.push({ html:`已知 ${a} × ${b} = ${prod}，所以 ${prod} ÷ ${a} ＝ （ ）`, answer:`${b}` });
+      } else if (type===1) {
+        qs.push({ html:`已知 ${a} × ${b} = ${prod}，所以 ${prod} ÷ ${b} ＝ （ ）`, answer:`${a}` });
+      } else {
+        qs.push({ html:`（ ）× ${a} = ${prod}，所以（ ）＝？`, answer:`${b}` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 8b 乘除應用 ──
+  '8b': () => {
+    const problems = [
+      ()=>{ const d=rand(2,9),tot=rand(100,600); const each=Math.floor(tot/d); return { html:`有 ${tot} 元平分給 ${d} 個人，每人分幾元？`, answer:`${tot} ÷ ${d} = ${each} 元` }; },
+      ()=>{ const each=rand(5,20),n=rand(3,9); return { html:`每天讀 ${each} 頁書，${n} 天共讀幾頁？`, answer:`${each} × ${n} = ${each*n} 頁` }; },
+      ()=>{ const tot=rand(200,900),d=rand(3,9),each=Math.floor(tot/d),rem=tot%d; return { html:`把 ${tot} 個糖果分成 ${d} 袋，每袋幾個？還剩幾個？`, answer:`${tot} ÷ ${d} = ${each} 個⋯${rem} 個` }; },
+      ()=>{ const p=rand(50,200),n=rand(3,8); return { html:`買 ${n} 件 ${p} 元的衣服，共花幾元？`, answer:`${p} × ${n} = ${p*n} 元` }; },
+      ()=>{ const tot=rand(3,9)*rand(3,9),d=rand(2,6),each=Math.floor(tot/d),rem=tot%d; return { html:`${tot} 朵花分成 ${d} 束，每束幾朵？還剩幾朵？`, answer:`${tot} ÷ ${d} = ${each} 朵⋯${rem} 朵` }; },
+      ()=>{ const r=rand(3,9),c=rand(3,9); return { html:`有 ${r} 排座位，每排 ${c} 個，共幾個座位？`, answer:`${r} × ${c} = ${r*c} 個` }; },
+      ()=>{ const packs=rand(3,8),each=rand(5,15),take=rand(5,20); return { html:`每包有 ${each} 顆糖，${packs} 包共幾顆？`, answer:`${each} × ${packs} = ${each*packs} 顆` }; },
+      ()=>{ const tot=rand(100,900),d=rand(4,9),each=Math.floor(tot/d); return { html:`${tot} 個蛋黃酥裝 ${d} 盒，每盒幾個？`, answer:`${tot} ÷ ${d} = ${each} 個` }; },
+      ()=>{ const day=rand(3,8),week=rand(2,5); return { html:`每週工作 ${day} 天，${week} 週共工作幾天？`, answer:`${day} × ${week} = ${day*week} 天` }; },
+      ()=>{ const tot=rand(200,800),g=rand(3,8),each=Math.floor(tot/g),rem=tot%g; return { html:`${tot} 本書分給 ${g} 個班，每班幾本？還剩幾本？`, answer:`${tot} ÷ ${g} = ${each} 本⋯${rem} 本` }; },
+    ];
+    return problems.map(p=>p());
+  },
+
+  // ── 8c 乘法估算 ──
+  '8c': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const a=rand(100,500),b=rand(2,9);
+      const rounded=Math.round(a/100)*100;
+      const est=rounded*b;
+      const exact=a*b;
+      qs.push({ html: `估算看看：${a} × ${b} 大約是多少？（先把 ${a} 四捨五入到百位再算）`, answer: `約 ${rounded} × ${b} = ${est}（實際 = ${exact}）` });
+    }
+    return qs;
+  },
+
+  // ── 9a 面積 ──
+  '9a': () => {
+    const qs = [];
+    for (let i = 0; i < 10; i++) {
+      const type=rand(0,3);
+      if (type===0) {
+        const s=rand(1,10);
+        qs.push({ html:`邊長 ${s} 公分的正方形，面積是幾平方公分？`, answer:`${s} × ${s} = ${s*s} 平方公分` });
+      } else if (type===1) {
+        const w=rand(2,10),h=rand(2,10);
+        qs.push({ html:`長 ${w} 公分、寬 ${h} 公分的長方形，面積是幾平方公分？`, answer:`${w} × ${h} = ${w*h} 平方公分` });
+      } else if (type===2) {
+        const area=rand(2,12)*rand(2,8);
+        qs.push({ html:`面積是 ${area} 平方公分的長方形，如果長是 ${rand(2,10)} 公分，寬是幾公分？`, answer:`${area} ÷ ? = ? （需知道長才能算）` });
+      } else {
+        const w=rand(2,10),h=rand(2,10);
+        qs.push({ html:`長方形長 ${w} 公分、寬 ${h} 公分，面積是幾平方公分？和幾個邊長 1 公分的正方形一樣大？`, answer:`${w} × ${h} = ${w*h} 平方公分，相當於 ${w*h} 個` });
+      }
+    }
+    return qs;
+  },
+
+  // ── 9b 數格子面積 ──
+  '9b': () => {
+    const problems = [
+      ()=>{ const n=rand(4,16); return { html:`方格紙上有一個圖形，佔了 ${n} 格（每格1平方公分），這個圖形的面積是幾平方公分？`, answer:`${n} 平方公分` }; },
+      ()=>{ const n1=rand(4,12),n2=rand(4,12); return { html:`甲圖形佔 ${n1} 格，乙圖形佔 ${n2} 格（每格1平方公分），哪個面積較大？大多少？`, answer:`${n1>n2?'甲':'乙'} 大，大 ${Math.abs(n1-n2)} 平方公分` }; },
+      ()=>{ const a=rand(4,16),b=rand(4,16); return { html:`兩個圖形，一個面積 ${a} 平方公分，另一個 ${b} 平方公分，合起來共幾平方公分？`, answer:`${a} + ${b} = ${a+b} 平方公分` }; },
+      ()=>{ const w=rand(2,8),h=rand(2,8); return { html:`在方格紙上畫出一個面積是 ${w*h} 平方公分的長方形（寬 ${w} 格，長 ${h} 格），這個圖形有幾格？`, answer:`${w} × ${h} = ${w*h} 格，面積 ${w*h} 平方公分` }; },
+      ()=>{ const tot=rand(10,25),rm=rand(2,tot-2); return { html:`大圖形佔 ${tot} 格，剪掉 ${rm} 格後，剩下面積是幾平方公分？`, answer:`${tot} - ${rm} = ${tot-rm} 平方公分` }; },
+      ()=>{ const s=rand(3,8); return { html:`邊長 ${s} 格的正方形，面積是幾格（幾平方公分）？`, answer:`${s} × ${s} = ${s*s} 平方公分` }; },
+      ()=>{ const a=rand(8,20),b=rand(8,20); return { html:`甲圖形 ${a} 平方公分，乙圖形 ${b} 平方公分，面積相差幾平方公分？`, answer:`|${a} - ${b}| = ${Math.abs(a-b)} 平方公分` }; },
+      ()=>{ const n=rand(5,15); return { html:`下面圖形由 ${n} 個 1 平方公分的正方形拼成，圖形面積是幾平方公分？`, answer:`${n} 平方公分` }; },
+      ()=>{ const w=rand(3,8),h=rand(3,8),cut=rand(1,4); return { html:`長 ${w} 格、寬 ${h} 格的長方形，剪去角落 ${cut} 個格子，面積是幾平方公分？`, answer:`${w*h} - ${cut} = ${w*h-cut} 平方公分` }; },
+      ()=>{ const target=rand(6,20); return { html:`請在方格紙上畫一個面積是 ${target} 平方公分的圖形（可以不是長方形），說明你怎麼數的。`, answer:`只要總格數為 ${target} 格即可` }; },
+    ];
+    return problems.map(p=>p());
+  },
+};
+
+// ===== PIE CHART FOR FRACTIONS =====
+function buildPie(parts, svgId, colorCount) {
+  const size = 120;
+  const r = 50;
+  const cx = 60, cy = 60;
+  const sliceAngle = (2 * Math.PI) / parts;
+
+  let paths = '';
+  for (let i = 0; i < parts; i++) {
+    const startA = -Math.PI / 2 + i * sliceAngle;
+    const endA = startA + sliceAngle;
+    const x1 = cx + r * Math.cos(startA);
+    const y1 = cy + r * Math.sin(startA);
+    const x2 = cx + r * Math.cos(endA);
+    const y2 = cy + r * Math.sin(endA);
+    const large = sliceAngle > Math.PI ? 1 : 0;
+
+    // For full circle (1 part), use a circle element instead
+    const d = parts === 1
+      ? `M ${cx} ${cy} m -${r} 0 a ${r} ${r} 0 1 0 ${2*r} 0 a ${r} ${r} 0 1 0 -${2*r} 0`
+      : `M ${cx} ${cy} L ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`;
+
+    paths += `<path class="pie-sector" d="${d}" onclick="toggleSector(this, '${svgId}')" data-idx="${i}"/>`;
+  }
+
+  return `
+    <div>
+      <svg class="pie-svg" id="${svgId}" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
+        ${paths}
+      </svg>
+      <div class="color-hint">點擊扇形塗色 / 再點取消</div>
+      <button class="color-reset" onclick="resetPie('${svgId}')">🔄 重置</button>
+    </div>`;
+}
+
+function toggleSector(el, svgId) {
+  el.classList.toggle('colored');
+}
+
+function resetPie(svgId) {
+  document.querySelectorAll(`#${svgId} .pie-sector`).forEach(s => s.classList.remove('colored'));
+}
+
+// ===== 手寫計算板 =====
+
+// 每個 canvas 的狀態
+const drawState = {};
+
+function initAllCanvas() {
+  document.querySelectorAll('.draw-canvas').forEach(canvas => {
+    if (drawState[canvas.id]) return; // 已初始化過
+    initCanvas(canvas);
+  });
+}
+
+function initCanvas(canvas) {
+  const id = canvas.id;
+  // 設定實際像素尺寸（配合 devicePixelRatio 讓筆跡清晰）
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.parentElement.offsetWidth || 320;
+  canvas.width = w * dpr;
+  canvas.height = 180 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  drawState[id] = {
+    ctx, dpr,
+    drawing: false,
+    color: '#1a1a1a',
+    size: 2,
+    eraser: false,
+    lastX: 0, lastY: 0,
+  };
+
+  // Pointer events（支援滑鼠、觸控筆、手指）
+  canvas.addEventListener('pointerdown', e => startDraw(e, id));
+  canvas.addEventListener('pointermove', e => draw(e, id));
+  canvas.addEventListener('pointerup',   e => endDraw(id));
+  canvas.addEventListener('pointerleave',e => endDraw(id));
+  // 防止平板觸控時整頁滾動
+  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+}
+
+function getPos(e, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  // 支援 touch 和 pointer
+  const clientX = e.clientX ?? (e.touches?.[0]?.clientX);
+  const clientY = e.clientY ?? (e.touches?.[0]?.clientY);
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top,
+  };
+}
+
+function startDraw(e, id) {
+  const s = drawState[id];
+  if (!s) return;
+  s.drawing = true;
+  const canvas = document.getElementById(id);
+  const pos = getPos(e, canvas);
+  s.lastX = pos.x;
+  s.lastY = pos.y;
+  // 點一下也能畫出點
+  const ctx = s.ctx;
+  ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
+  ctx.lineWidth = s.eraser ? s.size * 4 : s.size;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+  ctx.fillStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
+  ctx.fill();
+  e.preventDefault();
+}
+
+function draw(e, id) {
+  const s = drawState[id];
+  if (!s || !s.drawing) return;
+  const canvas = document.getElementById(id);
+  const pos = getPos(e, canvas);
+  const ctx = s.ctx;
+
+  ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
+  ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
+  ctx.lineWidth = s.eraser ? s.size * 4 : s.size;
+
+  ctx.beginPath();
+  ctx.moveTo(s.lastX, s.lastY);
+  // 貝茲曲線讓筆跡平滑
+  const midX = (s.lastX + pos.x) / 2;
+  const midY = (s.lastY + pos.y) / 2;
+  ctx.quadraticCurveTo(s.lastX, s.lastY, midX, midY);
+  ctx.stroke();
+
+  s.lastX = pos.x;
+  s.lastY = pos.y;
+  e.preventDefault();
+}
+
+function endDraw(id) {
+  const s = drawState[id];
+  if (s) s.drawing = false;
+}
+
+function toggleDrawPanel(padId, btn) {
+  const panel = document.getElementById(padId);
+  const isOpen = panel.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.innerHTML = isOpen ? '✏️ 收起計算板' : '✏️ 手寫計算';
+  if (isOpen) {
+    // 面板展開後才能拿到正確寬度，重新初始化 canvas
+    const canvasId = padId.replace('pad_', 'canvas_');
+    const canvas = document.getElementById(canvasId);
+    if (!drawState[canvasId]) {
+      setTimeout(() => initCanvas(canvas), 30);
+    }
+  }
+}
+
+function setColor(btn, canvasId, color) {
+  const s = drawState[canvasId];
+  if (s) { s.color = color; s.eraser = false; }
+  // 更新 UI：顏色按鈕
+  const toolbar = btn.closest('.draw-toolbar');
+  toolbar.querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // 關閉橡皮擦狀態
+  const eraserBtn = toolbar.querySelector('.btn-eraser');
+  if (eraserBtn) eraserBtn.classList.remove('active');
+}
+
+function setSize(btn, canvasId, size) {
+  const s = drawState[canvasId];
+  if (s) s.size = size;
+  const toolbar = btn.closest('.draw-toolbar');
+  toolbar.querySelectorAll('.draw-size-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleEraser(btn, canvasId) {
+  const s = drawState[canvasId];
+  if (!s) return;
+  s.eraser = !s.eraser;
+  btn.classList.toggle('active', s.eraser);
+  // 橡皮擦開啟時取消顏色選取狀態
+  if (s.eraser) {
+    btn.closest('.draw-toolbar').querySelectorAll('.draw-color-btn').forEach(b => b.classList.remove('active'));
+  }
+}
+
+function clearCanvas(canvasId) {
+  const s = drawState[canvasId];
+  if (!s) return;
+  const canvas = document.getElementById(canvasId);
+  s.ctx.clearRect(0, 0, canvas.width / s.dpr, canvas.height / s.dpr);
+}
+
+// ===== INIT =====
+buildHome();
+buildExamHome();
+
+// ===== MODE SWITCHING =====
+let currentMode = 'practice';
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('tabPractice').classList.toggle('active', mode === 'practice');
+  document.getElementById('tabExam').classList.toggle('active', mode === 'exam');
+  document.getElementById('practicePanel').style.display = mode === 'practice' ? 'block' : 'none';
+  document.getElementById('examPanel').style.display = mode === 'exam' ? 'block' : 'none';
+}
+
+// ===== EXAM HOME =====
+const examSelectedTopics = new Set();
+
+function buildExamHome() {
+  const container = document.getElementById('examUnitsContainer');
+  container.innerHTML = '';
+  UNITS.forEach(unit => {
+    const block = document.createElement('div');
+    block.className = `unit-block unit-${unit.id}`;
+    block.innerHTML = `
+      <div class="unit-label">
+        <span class="dot"></span>${unit.name}
+        <button onclick="examSelectUnit(${unit.id})" style="margin-left:auto;font-size:11px;padding:2px 8px;border:1px solid #bbb;border-radius:10px;background:#fff;cursor:pointer;font-family:inherit;color:var(--muted)">全選</button>
+      </div>
+      <div class="topics-grid">
+        ${unit.topics.map(t => `
+          <div class="exam-topic-card" id="eccard-${t.id}" onclick="toggleExamTopic('${t.id}', this)">
+            <span class="e-emoji">${t.emoji}</span>
+            <span class="e-name">${t.name}</span>
+            <div class="e-check">✓</div>
+          </div>`).join('')}
+      </div>`;
+    container.appendChild(block);
+  });
+}
+
+function toggleExamTopic(id, el) {
+  if (examSelectedTopics.has(id)) {
+    examSelectedTopics.delete(id);
+    el.classList.remove('selected');
+  } else {
+    examSelectedTopics.add(id);
+    el.classList.add('selected');
+  }
+  updateExamBtn();
+}
+
+function examSelectUnit(unitId) {
+  const unit = UNITS.find(u => u.id === unitId);
+  if (!unit) return;
+  const allSelected = unit.topics.every(t => examSelectedTopics.has(t.id));
+  unit.topics.forEach(t => {
+    const card = document.getElementById('eccard-' + t.id);
+    if (allSelected) {
+      examSelectedTopics.delete(t.id);
+      card && card.classList.remove('selected');
+    } else {
+      examSelectedTopics.add(t.id);
+      card && card.classList.add('selected');
+    }
+  });
+  updateExamBtn();
+}
+
+function updateExamBtn() {
+  const n = examSelectedTopics.size;
+  document.getElementById('examSelectedCount').textContent = n;
+  const btn = document.getElementById('btnExamGenerate');
+  btn.disabled = n === 0;
+  btn.innerHTML = n === 0
+    ? '📝 產生考卷（請先選擇主題）'
+    : `📝 產生考卷（已選 ${n} 個主題）`;
+}
+
+// ===== EXAM GENERATION =====
+let lastExamTopics = [];
+
+function startExam() {
+  lastExamTopics = [...examSelectedTopics];
+  generateExamPaper();
+}
+
+function regenExam() {
+  generateExamPaper();
+}
+
+function generateExamPaper() {
+  const total = 25; // 固定 25 題
+  const topicIds = lastExamTopics;
+  const isInteractive = q => q.extra && q.extra.includes('pie-sector');
+
+  // Fisher-Yates 洗牌
+  const shuffle = arr => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+
+  // 每個主題各自產生足夠的題目池（分為偏難 / 一般）
+  const hardPool = [];
+  const easyPool = [];
+
+  topicIds.forEach(id => {
+    const gen = GENERATORS[id];
+    if (!gen) return;
+
+    let attempts = 0;
+    const localHard = [], localEasy = [];
+
+    // 最多產生 4 批（40 題），收集足夠的一般題和偏難題
+    while (attempts < 4) {
+      attempts++;
+      const batch = gen();
+      batch.forEach(q => {
+        if (isInteractive(q)) return; // 跳過互動塗色
+        if (q.hard) localHard.push(q);
+        else localEasy.push(q);
+      });
+    }
+    hardPool.push(...localHard);
+    easyPool.push(...localEasy);
+  });
+
+  // 決定難題數量（固定 5 題），剩下 20 題從一般題抽
+  const hardCount = 5;
+  const easyCount = total - hardCount;
+
+  const pickedHard = shuffle(hardPool).slice(0, hardCount);
+  const pickedEasy = shuffle(easyPool).slice(0, easyCount);
+
+  // 如果偏難題不足 5 題（例如沒選到 6d），用一般題補足
+  const fallback = shuffle(easyPool).slice(easyCount);
+  const allPicked = [...pickedEasy, ...pickedHard, ...fallback].slice(0, total);
+
+  // 全部打亂順序，讓難題隨機散布
+  const allQuestions = shuffle(allPicked);
+  renderExamPaper(allQuestions);
+}
+
+function renderExamPaper(questions) {
+  const topicNames = lastExamTopics.map(id => {
+    const t = findTopic(id);
+    return t ? t.name : '';
+  }).join('、');
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()} 年 ${now.getMonth()+1} 月 ${now.getDate()} 日`;
+
+  const fixExtra = (extra) => {
+    if (!extra) return '';
+    // 只縮限外層 div 的最大寬度，不動 SVG 內部任何屬性
+    // 把 max-width 上限統一壓到 340px 以適應考卷欄寬
+    return extra.replace(/max-width:\s*\d+px/g, 'max-width:340px');
+  };
+
+  // ── 學生版：題目＋作答空間，無答案，兩欄排版 ──
+  // 判斷是否需要全寬（有SVG圖形、有多個子題、或題目文字較長）
+  const needsFullWidth = q =>
+    (q.extra && q.extra.trim() !== '') ||
+    (q.html && (q.html.includes('（1）') || q.html.includes('<br>（') || q.html.includes('下表')));
+
+  // 判斷是否有多個子題（需要更大作答空間）
+  const isMultiSub = q =>
+    q.html && (q.html.includes('（1）') || q.html.includes('（2）') || q.html.includes('（3）'));
+
+  const studentHtml = `
+    <div class="paper-header">
+      <div class="paper-title">三年級數學練習考卷</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">範圍：${topicNames}</div>
+      <div class="paper-meta">
+        <span>班級：____________</span>
+        <span>姓名：____________</span>
+        <span>座號：______</span>
+        <span>得分：______</span>
+      </div>
+    </div>
+    <div class="exam-two-col">
+      ${questions.map((q, i) => {
+        const fw = needsFullWidth(q);
+        const ms = isMultiSub(q);
+        return `
+        <div class="exam-q-block${fw?' full-width':''}${ms?' multi-sub':''}">
+          <div class="exam-q-num">第 ${i+1} 題${q.hard ? ' ⭐' : ''}</div>
+          <div class="exam-q-text">${q.html}</div>
+          ${fixExtra(q.extra)}
+          <div class="exam-q-space"></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  // ── 教師版：只有答案清單，緊湊排列方便對答 ──
+  const teacherHtml = `
+    <div class="paper-header">
+      <div class="paper-title">教師答案版</div>
+      <div style="font-size:12px;color:#666;margin-top:4px">範圍：${topicNames}</div>
+      <div style="font-size:12px;color:#E74C3C;margin-top:4px;font-weight:700">⚠️ 教師專用，請勿發給學生</div>
+      <div class="paper-meta">
+        <span>出題日期：${dateStr}</span>
+        <span>共 ${questions.length} 題</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      ${questions.map((q, i) => `
+        <div style="background:${q.hard?'#FFF8E1':'#FFFDF0'};border:1.5px solid ${q.hard?'#E74C3C':'#F39C12'};border-radius:8px;padding:8px 12px;display:flex;gap:8px;align-items:baseline">
+          <span style="font-size:12px;font-weight:800;color:#2980B9;white-space:nowrap">第${i+1}題${q.hard?'<span style="color:#E74C3C;font-size:10px"> ⭐難</span>':''}</span>
+          <span style="font-size:13px;font-weight:700;color:#7D4E00">${q.answer}</span>
+        </div>`).join('')}
+    </div>`;
+
+  document.getElementById('studentPaper').innerHTML = studentHtml;
+  document.getElementById('teacherPaper').innerHTML = teacherHtml;
+  document.getElementById('printTitle').textContent = `考卷（共 ${questions.length} 題）`;
+
+  document.getElementById('homeScreen').classList.add('hidden');
+  document.getElementById('quizScreen').classList.remove('active');
+  document.getElementById('printScreen').classList.add('active');
+  switchPrintTab('student');
+}
+
+function switchPrintTab(tab) {
+  document.getElementById('ptabStudent').classList.toggle('active', tab === 'student');
+  document.getElementById('ptabTeacher').classList.toggle('active', tab === 'teacher');
+  document.getElementById('studentPaper').style.display = tab === 'student' ? 'block' : 'none';
+  document.getElementById('teacherPaper').style.display = tab === 'teacher' ? 'block' : 'none';
+}
+
+function goBackToExam() {
+  document.getElementById('printScreen').classList.remove('active');
+  document.getElementById('homeScreen').classList.remove('hidden');
+  switchMode('exam');
+}
+
+</script>
+</body>
+</html>
