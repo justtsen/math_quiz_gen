@@ -2183,7 +2183,6 @@ function initAllCanvas() {
 
 function initCanvas(canvas) {
   const id = canvas.id;
-  // 設定實際像素尺寸（配合 devicePixelRatio 讓筆跡清晰）
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
   const w = rect.width || canvas.parentElement.offsetWidth || 320;
@@ -2193,6 +2192,7 @@ function initCanvas(canvas) {
   ctx.scale(dpr, dpr);
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
+  ctx.imageSmoothingEnabled = true;
 
   drawState[id] = {
     ctx, dpr,
@@ -2200,76 +2200,105 @@ function initCanvas(canvas) {
     color: '#1a1a1a',
     size: 2,
     eraser: false,
-    lastX: 0, lastY: 0,
+    // 紀錄完整的點序列，用來做平滑插值
+    points: [],
   };
 
-  // Pointer events（支援滑鼠、觸控筆、手指）
-  canvas.addEventListener('pointerdown', e => startDraw(e, id));
-  canvas.addEventListener('pointermove', e => draw(e, id));
-  canvas.addEventListener('pointerup',   e => endDraw(id));
-  canvas.addEventListener('pointerleave',e => endDraw(id));
-  // 防止平板觸控時整頁滾動
-  canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+  // 用 canvas 元素本身捕捉所有 pointer 事件，不依賴 document
+  canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId); // 關鍵：捕捉指標，移出 canvas 也不漏事件
+    startDraw(e, id, canvas);
+  });
+  canvas.addEventListener('pointermove', e => {
+    draw(e, id, canvas);
+  });
+  canvas.addEventListener('pointerup', e => {
+    endDraw(id);
+  });
+  canvas.addEventListener('pointercancel', e => {
+    endDraw(id);
+  });
+  // 防止觸控時整頁滾動
+  canvas.style.touchAction = 'none';
 }
 
 function getPos(e, canvas) {
   const rect = canvas.getBoundingClientRect();
-  // 支援 touch 和 pointer
-  const clientX = e.clientX ?? (e.touches?.[0]?.clientX);
-  const clientY = e.clientY ?? (e.touches?.[0]?.clientY);
   return {
-    x: clientX - rect.left,
-    y: clientY - rect.top,
+    x: (e.clientX - rect.left),
+    y: (e.clientY - rect.top),
   };
 }
 
-function startDraw(e, id) {
+function startDraw(e, id, canvas) {
   const s = drawState[id];
   if (!s) return;
   s.drawing = true;
-  const canvas = document.getElementById(id);
   const pos = getPos(e, canvas);
-  s.lastX = pos.x;
-  s.lastY = pos.y;
-  // 點一下也能畫出點
+  s.points = [pos]; // 重置點序列
+
+  // 設定畫筆樣式
   const ctx = s.ctx;
   ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
-  ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
-  ctx.lineWidth = s.eraser ? s.size * 4 : s.size;
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = s.eraser ? s.size * 5 : s.size;
+  ctx.fillStyle = s.color;
+
+  // 點一下畫出圓點
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, ctx.lineWidth / 2, 0, Math.PI * 2);
-  ctx.fillStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
   ctx.fill();
-  e.preventDefault();
 }
 
-function draw(e, id) {
+function draw(e, id, canvas) {
   const s = drawState[id];
   if (!s || !s.drawing) return;
-  const canvas = document.getElementById(id);
+
   const pos = getPos(e, canvas);
+  s.points.push(pos);
+
+  const pts = s.points;
   const ctx = s.ctx;
 
   ctx.globalCompositeOperation = s.eraser ? 'destination-out' : 'source-over';
-  ctx.strokeStyle = s.eraser ? 'rgba(0,0,0,1)' : s.color;
-  ctx.lineWidth = s.eraser ? s.size * 4 : s.size;
+  ctx.strokeStyle = s.color;
+  ctx.lineWidth = s.eraser ? s.size * 5 : s.size;
+
+  // 需要至少 2 個點才能畫線
+  if (pts.length < 2) return;
 
   ctx.beginPath();
-  ctx.moveTo(s.lastX, s.lastY);
-  // 貝茲曲線讓筆跡平滑
-  const midX = (s.lastX + pos.x) / 2;
-  const midY = (s.lastY + pos.y) / 2;
-  ctx.quadraticCurveTo(s.lastX, s.lastY, midX, midY);
-  ctx.stroke();
 
-  s.lastX = pos.x;
-  s.lastY = pos.y;
-  e.preventDefault();
+  if (pts.length === 2) {
+    // 只有兩點時直線連接
+    ctx.moveTo(pts[0].x, pts[0].y);
+    ctx.lineTo(pts[1].x, pts[1].y);
+  } else {
+    // 三點以上用 Catmull-Rom 平滑插值
+    // 從倒數第三個點開始重畫最後一段，確保連續
+    const i = pts.length - 1;
+    const p0 = pts[i - 2] || pts[0];
+    const p1 = pts[i - 1];
+    const p2 = pts[i];
+
+    // 中點作為端點，控制點是 p1
+    const mid1X = (p0.x + p1.x) / 2;
+    const mid1Y = (p0.y + p1.y) / 2;
+    const mid2X = (p1.x + p2.x) / 2;
+    const mid2Y = (p1.y + p2.y) / 2;
+
+    ctx.moveTo(mid1X, mid1Y);
+    ctx.quadraticCurveTo(p1.x, p1.y, mid2X, mid2Y);
+  }
+
+  ctx.stroke();
 }
 
 function endDraw(id) {
   const s = drawState[id];
-  if (s) s.drawing = false;
+  if (!s) return;
+  s.drawing = false;
+  s.points = [];
 }
 
 function toggleDrawPanel(padId, btn) {
